@@ -1,90 +1,6 @@
--- Global variables
-KillCounter = {}
--- KillCounterEnhancedDB is now initialized in the Initialize function
+-- KillCounter_UI.lua
+-- Handles all UI elements, including frames, buttons, and slash commands
 
--- Helper function to extract NPC ID from GUID
-function KillCounter:GetNPCID(guid)
-    if not guid then return nil end
-    -- GUID format: "Creature-0-5252-1-3172-5331-000007DE68"
-    -- NPC ID is the 6th element in the dash-separated list
-    local parts = {}
-    for part in string.gmatch(guid, "[^-]+") do
-        table.insert(parts, part)
-    end
-    if #parts >= 6 then
-        return tonumber(parts[6])
-    end
-    return nil
-end
-
--- Initialize the addon
-function KillCounter:Initialize()
-    print("|cFF00FF00Kill Counter|r loaded. Type /kc for commands.")
-    
-    -- Initialize the database
-    KillCounterEnhancedDB = KillCounterEnhancedDB or {}
-    KillCounterEnhancedDB.kills = KillCounterEnhancedDB.kills or {}
-    KillCounterEnhancedDB.lootTracking = KillCounterEnhancedDB.lootTracking or {}
-    KillCounterEnhancedDB.enemyNames = KillCounterEnhancedDB.enemyNames or {}
-    
-    -- Create event frame
-    self.eventFrame = CreateFrame("Frame")
-    self.eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-    self.eventFrame:SetScript("OnEvent", function(frame, event, ...)
-        self:OnCombatEvent(CombatLogGetCurrentEventInfo())
-    end)
-    
-    -- Create UI window
-    self:CreateUI()
-end
-
--- Handle combat events
-function KillCounter:OnCombatEvent()
-    local args = {CombatLogGetCurrentEventInfo()}
-    local timestamp, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool, auraType, amount = unpack(args)
-    
-    -- We only care about kill events
-    if event ~= "UNIT_DIED" and event ~= "PARTY_KILL" then
-        return
-    end
-    
-    local playerGUID = UnitGUID("player")
-    
-    -- Enemy dies - check if player or party got the kill
-    if destGUID and destName and destName ~= "" then
-        -- Count if player was the killer OR if it's a party kill and player is in a party
-        if sourceGUID == playerGUID or (event == "PARTY_KILL" and (IsInGroup() or IsInRaid())) then
-            local enemyID = self:GetNPCID(destGUID)
-            if not enemyID then 
-                return nil 
-            end
-            -- Store enemy name for display purposes
-            KillCounterEnhancedDB.enemyNames[enemyID] = destName
-            
-            -- Initialize counter for this enemy if it doesn't exist
-            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] or 0
-            
-            -- Increment kill counter for this enemy
-            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] + 1
-
-            -- Check if this enemy is being tracked for loot
-            if KillCounterEnhancedDB.lootTracking[enemyID] then
-                local tracking = KillCounterEnhancedDB.lootTracking[enemyID]
-                local currentKills = KillCounterEnhancedDB.kills[enemyID]
-                local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, currentKills)
-                
-                print("|cFF00FFFFLoot Chance:|r " .. string.format("%.2f", dropChance) .. "%")
-            end
-            
-            -- Update UI if it's visible
-            if self.mainFrame and self.mainFrame:IsShown() then
-                self:UpdateUI()
-            end
-        end
-    end
-end
-
--- Create the UI window
 function KillCounter:CreateUI()
     -- Main frame
     self.mainFrame = CreateFrame("Frame", "KillCounterFrame", UIParent, "BasicFrameTemplateWithInset")
@@ -103,13 +19,6 @@ function KillCounter:CreateUI()
     self.mainFrame.title = self.mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.mainFrame.title:SetPoint("TOP", self.mainFrame, "TOP", 0, -5)
     self.mainFrame.title:SetText("Kill Counter")
-    
-    -- Close button
-    -- self.mainFrame.closeButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
-    -- self.mainFrame.closeButton:SetSize(20, 20)
-    -- self.mainFrame.closeButton:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -5, -5)
-    -- self.mainFrame.closeButton:SetText("X")
-    -- self.mainFrame.closeButton:SetScript("OnClick", function() self.mainFrame:Hide() end)
     
     -- Scroll frame for content
     self.mainFrame.scrollFrame = CreateFrame("ScrollFrame", nil, self.mainFrame, "UIPanelScrollFrameTemplate")
@@ -166,7 +75,6 @@ function KillCounter:CreateUI()
     self:CreateLootDialog()
 end
 
--- Create the loot dialog
 function KillCounter:CreateLootDialog()
     -- Main dialog frame
     self.lootDialog = CreateFrame("Frame", "KillCounterLootDialog", UIParent, "BasicFrameTemplateWithInset")
@@ -234,7 +142,6 @@ function KillCounter:CreateLootDialog()
     end)
 end
 
--- Show the loot dialog
 function KillCounter:ShowLootDialog()
     if self.lootDialog then
         -- Clear previous input
@@ -244,7 +151,6 @@ function KillCounter:ShowLootDialog()
     end
 end
 
--- Accept loot tracking from dialog
 function KillCounter:AcceptLootTracking()
     local enemyID = tonumber(self.lootDialog.enemyIDInput:GetText())
     local baseChance = tonumber(self.lootDialog.chanceInput:GetText())
@@ -275,7 +181,6 @@ function KillCounter:AcceptLootTracking()
     end
 end
 
--- Update the UI with current data
 function KillCounter:UpdateUI()
     if not KillCounter.mainFrame or not KillCounter.mainFrame.scrollFrame then return end
     
@@ -396,7 +301,6 @@ function KillCounter:UpdateUI()
     KillCounter.mainFrame.content:SetHeight(math.abs(yOffset) + 10)
 end
 
--- Toggle UI visibility
 function KillCounter:ToggleUI()
     if KillCounter.mainFrame:IsShown() then
         KillCounter.mainFrame:Hide()
@@ -406,13 +310,11 @@ function KillCounter:ToggleUI()
     end
 end
 
--- Calculate drop chance based on kills and base chance
 function KillCounter:CalculateDropChance(baseChance, totalKills)
     local chance = 1 - (1 - baseChance / 100) ^ totalKills
     return chance * 100
 end
 
--- Parse track command
 function KillCounter:ParseTrackCommand(msg)
     -- Remove "track " prefix
     local args = string.sub(msg, 7)
@@ -434,7 +336,6 @@ function KillCounter:ParseTrackCommand(msg)
     return enemyID, baseChance
 end
 
--- Parse untrack command
 function KillCounter:ParseUntrackCommand(msg)
     -- Remove "untrack " prefix
     local args = string.sub(msg, 9)
@@ -545,14 +446,3 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         end
     end
 end
-
--- Create loader frame
-local loaderFrame = CreateFrame("Frame")
-loaderFrame:RegisterEvent("PLAYER_LOGIN")
-loaderFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "PLAYER_LOGIN" then
-        KillCounter:Initialize()
-        -- Unregister the event after initialization to prevent it from running again
-        self:UnregisterEvent("PLAYER_LOGIN")
-    end
-end) 

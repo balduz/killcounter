@@ -1,0 +1,57 @@
+-- KillCounter_Events.lua
+-- Handles all combat and game events
+
+function KillCounter:RegisterEvents()
+    -- Create event frame
+    self.eventFrame = CreateFrame("Frame")
+    self.eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    self.eventFrame:SetScript("OnEvent", function(frame, event, ...)
+        KillCounter:OnCombatEvent(CombatLogGetCurrentEventInfo())
+    end)
+end
+
+-- Handle combat events
+function KillCounter:OnCombatEvent()
+    local args = {CombatLogGetCurrentEventInfo()}
+    local timestamp, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool, auraType, amount = unpack(args)
+    
+    -- We only care about kill events
+    if event ~= "UNIT_DIED" and event ~= "PARTY_KILL" then
+        return
+    end
+    
+    local playerGUID = UnitGUID("player")
+    
+    -- Enemy dies - check if player or party got the kill
+    if destGUID and destName and destName ~= "" then
+        -- Count if player was the killer OR if it's a party kill and player is in a party
+        if sourceGUID == playerGUID or (event == "PARTY_KILL" and (IsInGroup() or IsInRaid())) then
+            local enemyID = self:GetNPCID(destGUID)
+            if not enemyID then 
+                return nil 
+            end
+            -- Store enemy name for display purposes
+            KillCounterEnhancedDB.enemyNames[enemyID] = destName
+            
+            -- Initialize counter for this enemy if it doesn't exist
+            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] or 0
+            
+            -- Increment kill counter for this enemy
+            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] + 1
+
+            -- Check if this enemy is being tracked for loot
+            if KillCounterEnhancedDB.lootTracking[enemyID] then
+                local tracking = KillCounterEnhancedDB.lootTracking[enemyID]
+                local currentKills = KillCounterEnhancedDB.kills[enemyID]
+                local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, currentKills)
+                
+                print("|cFF00FFFFLoot Chance:|r " .. string.format("%.2f", dropChance) .. "%")
+            end
+            
+            -- Update UI if it's visible
+            if self.mainFrame and self.mainFrame:IsShown() then
+                self:UpdateUI()
+            end
+        end
+    end
+end
