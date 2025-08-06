@@ -5,7 +5,7 @@
 ## Version: 1.0
 ## SavedVariables: KillCounterEnhancedDB
 
-KillCounter_DB.lua
 KillCounter_Core.lua
+KillCounter_DB.lua
 KillCounter_Events.lua
 KillCounter_UI.lua
