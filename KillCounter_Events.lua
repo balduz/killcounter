@@ -30,14 +30,7 @@ function KillCounter:OnCombatEvent()
             if not enemyID then 
                 return nil 
             end
-            -- Store enemy name for display purposes
-            KillCounterEnhancedDB.enemyNames[enemyID] = destName
-            
-            -- Initialize counter for this enemy if it doesn't exist
-            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] or 0
-            
-            -- Increment kill counter for this enemy
-            KillCounterEnhancedDB.kills[enemyID] = KillCounterEnhancedDB.kills[enemyID] + 1
+            KillCounter:AddKill(enemyID, destName)
 
             -- Check if this enemy is being tracked for loot
             if KillCounterEnhancedDB.lootTracking[enemyID] then

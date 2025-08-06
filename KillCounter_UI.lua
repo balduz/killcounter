@@ -4,7 +4,7 @@
 function KillCounter:CreateUI()
     -- Main frame
     self.mainFrame = CreateFrame("Frame", "KillCounterFrame", UIParent, "BasicFrameTemplateWithInset")
-    self.mainFrame:SetSize(400, 500)
+    self.mainFrame:SetSize(400, 600) -- Increased height to accommodate both sections
     self.mainFrame:SetPoint("CENTER")
     self.mainFrame:SetMovable(true)
     self.mainFrame:EnableMouse(true)
@@ -13,8 +13,7 @@ function KillCounter:CreateUI()
     self.mainFrame:RegisterForDrag("LeftButton")
     self.mainFrame:SetScript("OnDragStart", self.mainFrame.StartMoving)
     self.mainFrame:SetScript("OnDragStop", self.mainFrame.StopMovingOrSizing)
-    self.mainFrame:Hide()
-    
+    self.mainFrame:Hide()    
     -- Title
     self.mainFrame.title = self.mainFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     self.mainFrame.title:SetPoint("TOP", self.mainFrame, "TOP", 0, -5)
@@ -23,48 +22,62 @@ function KillCounter:CreateUI()
     -- Scroll frame for content
     self.mainFrame.scrollFrame = CreateFrame("ScrollFrame", nil, self.mainFrame, "UIPanelScrollFrameTemplate")
     self.mainFrame.scrollFrame:SetPoint("TOPLEFT", self.mainFrame, "TOPLEFT", 10, -30)
-    self.mainFrame.scrollFrame:SetPoint("BOTTOMRIGHT", self.mainFrame, "BOTTOMRIGHT", -30, 10)
+    self.mainFrame.scrollFrame:SetPoint("BOTTOMRIGHT", self.mainFrame, "BOTTOMRIGHT", -30, 40) -- Adjusted for buttons
     
     -- Content frame
     self.mainFrame.content = CreateFrame("Frame", nil, self.mainFrame.scrollFrame)
     self.mainFrame.content:SetSize(350, 1)
     self.mainFrame.scrollFrame:SetScrollChild(self.mainFrame.content)
     
+    -- Buttons
+    local buttonYOffset = 10
+    local buttonXOffset = 10
+    local buttonWidth = 100
+    local buttonHeight = 25
+    local buttonSpacing = 10
+
     -- Update button
     self.mainFrame.updateButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
-    self.mainFrame.updateButton:SetSize(80, 25)
-    self.mainFrame.updateButton:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", 10, 10)
+    self.mainFrame.updateButton:SetSize(buttonWidth, buttonHeight)
+    self.mainFrame.updateButton:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", buttonXOffset, buttonYOffset)
     self.mainFrame.updateButton:SetText("Update")
     self.mainFrame.updateButton:SetScript("OnClick", function() KillCounter:UpdateUI() end)
 
-    -- Reset session button
-    self.mainFrame.resetButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
-    self.mainFrame.resetButton:SetSize(100, 25)
-    self.mainFrame.resetButton:SetPoint("LEFT", self.mainFrame.updateButton, "RIGHT", 10, 0)
-    self.mainFrame.resetButton:SetText("Reset Kills")
-    self.mainFrame.resetButton:SetScript("OnClick", function()
-        KillCounterEnhancedDB.kills = {}
-        KillCounter:UpdateUI()
-        print("|cFF00FF00Kill Counter:|r Kill data reset")
+    -- Reset Session button
+    self.mainFrame.resetSessionButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
+    self.mainFrame.resetSessionButton:SetSize(buttonWidth, buttonHeight)
+    self.mainFrame.resetSessionButton:SetPoint("LEFT", self.mainFrame.updateButton, "RIGHT", buttonSpacing, 0)
+    self.mainFrame.resetSessionButton:SetText("Reset Session")
+    self.mainFrame.resetSessionButton:SetScript("OnClick", function() 
+        KillCounter:ResetSessionKills()
     end)
 
-    -- Toggle loot tracking button
+    -- Reset All button
+    self.mainFrame.resetAllButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
+    self.mainFrame.resetAllButton:SetSize(buttonWidth, buttonHeight)
+    self.mainFrame.resetAllButton:SetPoint("LEFT", self.mainFrame.resetSessionButton, "RIGHT", buttonSpacing, 0)
+    self.mainFrame.resetAllButton:SetText("Reset All")
+    self.mainFrame.resetAllButton:SetScript("OnClick", function() 
+        KillCounter:ResetAllKills()
+    end)
+
+    -- Toggle Loot Tracking button (new row)
     self.mainFrame.toggleLootButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
-    self.mainFrame.toggleLootButton:SetSize(80, 25)
-    self.mainFrame.toggleLootButton:SetPoint("LEFT", self.mainFrame.resetButton, "RIGHT", 10, 0)
+    self.mainFrame.toggleLootButton:SetSize(buttonWidth, buttonHeight)
+    self.mainFrame.toggleLootButton:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", buttonXOffset, buttonYOffset + buttonHeight + buttonSpacing)
     self.mainFrame.toggleLootButton:SetText("Show Loot")
-    self.mainFrame.toggleLootButton:SetScript("OnClick", function()
+    self.mainFrame.toggleLootButton:SetScript("OnClick", function() 
         KillCounter.showLoot = not KillCounter.showLoot
         KillCounter.mainFrame.toggleLootButton:SetText(KillCounter.showLoot and "Hide Loot" or "Show Loot")
         KillCounter:UpdateUI()
     end)
 
-    -- Add loot tracking button
+    -- Add Loot Tracking button
     self.mainFrame.addLootButton = CreateFrame("Button", nil, self.mainFrame, "GameMenuButtonTemplate")
-    self.mainFrame.addLootButton:SetSize(80, 25)
-    self.mainFrame.addLootButton:SetPoint("LEFT", self.mainFrame.toggleLootButton, "RIGHT", 10, 0)
+    self.mainFrame.addLootButton:SetSize(buttonWidth, buttonHeight)
+    self.mainFrame.addLootButton:SetPoint("LEFT", self.mainFrame.toggleLootButton, "RIGHT", buttonSpacing, 0)
     self.mainFrame.addLootButton:SetText("Add Loot")
-    self.mainFrame.addLootButton:SetScript("OnClick", function()
+    self.mainFrame.addLootButton:SetScript("OnClick", function() 
         KillCounter:ShowLootDialog()
     end)
     
@@ -162,7 +175,7 @@ function KillCounter:AcceptLootTracking()
     end
     
     if not baseChance or baseChance <= 0 or baseChance > 100 then
-        print("|cFFFF0000Kill Counter:|r Invalid chance value. Use a number between 0.1 and 100 (e.g., 5.5 for 5.5%).")
+        print("|cFFFF0000Kill Counter:|r Invalid chance value. Use a number between 0.1 and 100 (e.g., 5.5 for 5.5%)")
         return
     end
     
@@ -182,6 +195,10 @@ function KillCounter:AcceptLootTracking()
 end
 
 function KillCounter:UpdateUI()
+    if not self.mainFrame then
+        return
+    end
+    
     if not KillCounter.mainFrame or not KillCounter.mainFrame.scrollFrame then return end
     
     -- Destroy old content frame and create a new one
@@ -199,26 +216,25 @@ function KillCounter:UpdateUI()
     local yOffset = 0
     local lineHeight = 20
     
-    -- Header
-    local header = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    header:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
-    header:SetText("Kill Statistics")
+    -- Persistent Kills Header
+    local persistentHeader = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    persistentHeader:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
+    persistentHeader:SetText("Persistent Kills")
     yOffset = yOffset - lineHeight - 5
     
-    -- Sort enemies by session kills
-    local sortedEnemies = {}
+    -- Sort enemies by persistent kills
+    local sortedPersistentEnemies = {}
     for enemyID, kills in pairs(KillCounterEnhancedDB.kills) do
         if kills > 0 then
-            table.insert(sortedEnemies, {id = enemyID, kills = kills})
+            table.insert(sortedPersistentEnemies, {id = enemyID, kills = kills})
         end
     end
-    table.sort(sortedEnemies, function(a, b) return a.kills > b.kills end)
+    table.sort(sortedPersistentEnemies, function(a, b) return a.kills > b.kills end)
     
-    -- Display enemies
-    for i, enemy in ipairs(sortedEnemies) do
+    -- Display persistent enemies
+    for i, enemy in ipairs(sortedPersistentEnemies) do
         local enemyName = KillCounterEnhancedDB.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
         
-        -- Enemy name and kills
         local enemyText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         enemyText:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
         enemyText:SetText(enemyName)
@@ -236,13 +252,44 @@ function KillCounter:UpdateUI()
             
             local lootText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             lootText:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 20, yOffset)
-            lootText:SetText("|cFF00FFFFLoot:|r " .. string.format("%.2f", dropChance) .. "% chance (Base: " .. tracking.baseChance .. "%)")
+            lootText:SetText("|cFF00FFFFLoot:|r " .. string.format("%.2f", dropChance) .. "% chance (Base: " .. tracking.baseChance .. ")")
             lootText:SetTextColor(0, 1, 1)
             
             yOffset = yOffset - lineHeight
         end
         
-        -- Add some spacing between enemies
+        yOffset = yOffset - 2
+    end
+    
+    -- Session Kills Header
+    yOffset = yOffset - 10 -- Add some space
+    local sessionHeader = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    sessionHeader:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
+    sessionHeader:SetText("Session Kills")
+    yOffset = yOffset - lineHeight - 5
+    
+    -- Sort enemies by session kills
+    local sortedSessionEnemies = {}
+    for enemyID, kills in pairs(KillCounterEnhancedDB.sessionKills) do
+        if kills > 0 then
+            table.insert(sortedSessionEnemies, {id = enemyID, kills = kills})
+        end
+    end
+    table.sort(sortedSessionEnemies, function(a, b) return a.kills > b.kills end)
+    
+    -- Display session enemies
+    for i, enemy in ipairs(sortedSessionEnemies) do
+        local enemyName = KillCounterEnhancedDB.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
+        
+        local enemyText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        enemyText:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
+        enemyText:SetText(enemyName)
+        
+        local killsText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        killsText:SetPoint("TOPRIGHT", KillCounter.mainFrame.content, "TOPRIGHT", 0, yOffset)
+        killsText:SetText("Kills: " .. enemy.kills)
+        
+        yOffset = yOffset - lineHeight
         yOffset = yOffset - 2
     end
     
@@ -356,18 +403,17 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         print("|cFF00FF00Kill Counter Commands:|r")
         print("/kc - Show all kill counts")
         print("/kc help - Show this help")
-        print("/kc reset - Reset all kill data")
+        print("/kc reset all - Reset all kill data")
+        print("/kc reset session - Reset session kill data")
         print("/kc ui - Toggle UI window")
         print("/kc [enemyID] - Show kills for specific enemy")
         print("/kc track [enemyID] [chance] - Track loot drop chance")
         print("/kc untrack [enemyID] - Stop tracking loot for enemy")
         print("/kc loot - Show all tracked loot")
-    elseif msg == "reset" then
-        KillCounterEnhancedDB.kills = {}
-        if KillCounter.mainFrame and KillCounter.mainFrame:IsShown() then
-            KillCounter:UpdateUI()
-        end
-        print("|cFF00FF00Kill Counter:|r Kill data reset")
+    elseif msg == "reset all" then
+        KillCounter:ResetAllKills()
+    elseif msg == "reset session" then
+        KillCounter:ResetSessionKills()
     elseif msg == "ui" then
         KillCounter:ToggleUI()
     elseif string.find(msg, "^track ") then
@@ -418,13 +464,14 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         local enemyID = tonumber(msg)
         if enemyID then
             local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-            local kills = KillCounterEnhancedDB.kills[enemyID] or 0
-            print("|cFF00FF00Kill Counter:|r " .. enemyName .. " (ID: " .. enemyID .. ") - Kills: " .. kills)
+            local persistentKills = KillCounterEnhancedDB.kills[enemyID] or 0
+            local sessionKills = KillCounterEnhancedDB.sessionKills[enemyID] or 0
+            print("|cFF00FF00Kill Counter:|r " .. enemyName .. " (ID: " .. enemyID .. ") - Persistent Kills: " .. persistentKills .. ", Session Kills: " .. sessionKills)
             
             -- Also show loot tracking info if available
             if KillCounterEnhancedDB.lootTracking[enemyID] then
                 local tracking = KillCounterEnhancedDB.lootTracking[enemyID]
-                local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, kills)
+                local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, persistentKills)
                 print("  |cFF00FFFFLoot:|r " .. string.format("%.2f", dropChance) .. "% chance")
             end
         else
@@ -432,17 +479,54 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         end
     else
         -- Show all kill counts
-        print("|cFF00FF00Kill Counter - Kills:|r")
-        local hasKills = false
+        print("|cFF00FF00Kill Counter - Persistent Kills:|r")
+        local hasPersistentKills = false
         for enemyID, kills in pairs(KillCounterEnhancedDB.kills) do
             if kills > 0 then
                 local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
                 print("  " .. enemyName .. " - Kills: " .. kills)
-                hasKills = true
+                hasPersistentKills = true
             end
         end
-        if not hasKills then
-            print("  No kills recorded yet")
+        if not hasPersistentKills then
+            print("  No persistent kills recorded yet")
+        end
+
+        print("\n|cFF00FF00Kill Counter - Session Kills:|r")
+        local hasSessionKills = false
+        for enemyID, kills in pairs(KillCounterEnhancedDB.sessionKills) do
+            if kills > 0 then
+                local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+                print("  " .. enemyName .. " - Kills: " .. kills)
+                hasSessionKills = true
+            end
+        end
+        if not hasSessionKills then
+            print("  No session kills recorded yet")
         end
     end
 end
+
+
+function KillCounter:ShowKillNotification(enemyName)
+    UIErrorsFrame:AddMessage("|cFF00FF00Kill Counter:|r Killed " .. enemyName .. "!", 1.0, 1.0, 0)
+end
+
+-- Tooltip integration
+GameTooltip:SetScript("OnTooltipSetUnit", function(self)
+    local unit = "mouseover"
+    local guid = UnitGUID(unit)
+    if not guid then return end
+
+    local npcID = KillCounter:GetNPCID(guid)
+    if not npcID then return end
+
+    local persistentKills = KillCounterEnhancedDB.kills[npcID] or 0
+    local sessionKills = KillCounterEnhancedDB.sessionKills[npcID] or 0
+
+    if persistentKills > 0 or sessionKills > 0 then
+        self:AddLine(" ") -- Add a blank line for spacing
+        self:AddDoubleLine("Kills (Overall):", persistentKills, 1, 1, 1, 1, 1, 0)
+        self:AddDoubleLine("Kills (Session):", sessionKills, 1, 1, 1, 1, 1, 0)
+    end
+end)
