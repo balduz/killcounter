@@ -1,0 +1,8 @@
+## Interface: 11404
+## Title: Enhanced Kill Counter
+## Notes: Tracks enemy kills and displays a dashboard with advanced features
+## Author: Your Name
+## Version: 1.0
+## SavedVariables: KillCounterEnhancedDB
+
+KillCounter.lua 
