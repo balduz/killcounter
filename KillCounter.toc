@@ -4,8 +4,10 @@
 ## Author: Your Name
 ## Version: 1.0
 ## SavedVariables: KillCounterEnhancedDB
+## OptionalDeps: Blizzard_AddonManager
 
 KillCounter_Core.lua
 KillCounter_DB.lua
 KillCounter_Events.lua
 KillCounter_UI.lua
+KillCounter_AceConfig.lua

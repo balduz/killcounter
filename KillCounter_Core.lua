@@ -1,7 +1,8 @@
 -- KillCounter_Core.lua
 -- Core addon functionality and initialization
 
-KillCounter = {}
+local AceAddon = LibStub("AceAddon-3.0")
+KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0") -- Assuming you use AceEvent
 
 -- Helper function to extract NPC ID from GUID
 function KillCounter:GetNPCID(guid)
@@ -11,50 +12,39 @@ function KillCounter:GetNPCID(guid)
 end
 
 -- Initialize the addon
-function KillCounter:Initialize()
-    self:InitializeDB()
+function KillCounter:OnInitialize()
+    self:OnAce3Initialize() -- Call the Ace3 initialization from KillCounter_AceConfig.lua
+    self.db.sessionKills = {} -- Initialize session kills
     self:RegisterEvents()
     self:CreateUI()
+    self:InitializeTooltip()
     print("|cFF00FF00Kill Counter|r loaded. Type /kc for commands.")
 end
-
--- Create loader frame
-local loaderFrame = CreateFrame("Frame")
-loaderFrame:RegisterEvent("PLAYER_LOGIN")
-loaderFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "PLAYER_LOGIN" then
-        KillCounter:Initialize()
-        -- Reset session kills on login
-        KillCounterEnhancedDB.sessionKills = {}
-        -- Unregister the event after initialization to prevent it from running again
-        self:UnregisterEvent("PLAYER_LOGIN")
-    end
-end)
 
 function KillCounter:AddKill(npcID, enemyName)
     if not npcID then return end
 
     -- Persistent kills
-    KillCounterEnhancedDB.kills[npcID] = (KillCounterEnhancedDB.kills[npcID] or 0) + 1
-    KillCounterEnhancedDB.enemyNames[npcID] = enemyName
+    self.db.profile.kills[npcID] = (self.db.profile.kills[npcID] or 0) + 1
+    self.db.profile.enemyNames[npcID] = enemyName
 
     -- Session kills
-    KillCounterEnhancedDB.sessionKills[npcID] = (KillCounterEnhancedDB.sessionKills[npcID] or 0) + 1
+    self.db.sessionKills[npcID] = (self.db.sessionKills[npcID] or 0) + 1
 
     self:UpdateUI()
     self:ShowKillNotification(enemyName)
 end
 
 function KillCounter:GetSessionKillCount(npcID)
-    return KillCounterEnhancedDB.sessionKills[npcID] or 0
+    return self.db.sessionKills[npcID] or 0
 end
 
 function KillCounter:GetAllSessionKills()
-    return KillCounterEnhancedDB.sessionKills
+    return self.db.sessionKills
 end
 
 function KillCounter:ResetSessionKills()
-    KillCounterEnhancedDB.sessionKills = {}
+    self.db.sessionKills = {}
     self:UpdateUI()
     print("|cFF00FF00KillCounter:|r Session kill data reset.")
 end

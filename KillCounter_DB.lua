@@ -1,11 +1,5 @@
 -- KillCounter_DB.lua
--- Handles database initialization and access
+-- This file now primarily defines the SavedVariables structure.
 
-function KillCounter:InitializeDB()
-    KillCounterEnhancedDB = KillCounterEnhancedDB or {}
-    KillCounterEnhancedDB.kills = KillCounterEnhancedDB.kills or {}
-    KillCounterEnhancedDB.lootTracking = KillCounterEnhancedDB.lootTracking or {}
-    KillCounterEnhancedDB.enemyNames = KillCounterEnhancedDB.enemyNames or {}
-    KillCounterEnhancedDB.sessionKills = {} -- Initialize session kills
-    print("|cFF00FF00KillCounter:|r Database initialized.")
-end
+-- KillCounterEnhancedDB will be initialized by AceDB-3.0 based on the defaults in KillCounter_AceConfig.lua
+-- No direct initialization logic is needed here anymore.

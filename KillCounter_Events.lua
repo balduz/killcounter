@@ -33,9 +33,9 @@ function KillCounter:OnCombatEvent()
             KillCounter:AddKill(enemyID, destName)
 
             -- Check if this enemy is being tracked for loot
-            if KillCounterEnhancedDB.lootTracking[enemyID] then
-                local tracking = KillCounterEnhancedDB.lootTracking[enemyID]
-                local currentKills = KillCounterEnhancedDB.kills[enemyID]
+            if self.db.profile.lootTracking[enemyID] then
+                local tracking = self.db.profile.lootTracking[enemyID]
+                local currentKills = self.db.profile.kills[enemyID]
                 local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, currentKills)
                 
                 print("|cFF00FFFFLoot Chance:|r " .. string.format("%.2f", dropChance) .. "%")

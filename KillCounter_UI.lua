@@ -180,8 +180,8 @@ function KillCounter:AcceptLootTracking()
     end
     
     -- Add to loot tracking
-    local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-    KillCounterEnhancedDB.lootTracking[enemyID] = {
+    local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+    KillCounter.db.profile.lootTracking[enemyID] = {
         baseChance = baseChance
     }
     
@@ -224,7 +224,7 @@ function KillCounter:UpdateUI()
     
     -- Sort enemies by persistent kills
     local sortedPersistentEnemies = {}
-    for enemyID, kills in pairs(KillCounterEnhancedDB.kills) do
+    for enemyID, kills in pairs(self.db.profile.kills) do
         if kills > 0 then
             table.insert(sortedPersistentEnemies, {id = enemyID, kills = kills})
         end
@@ -233,7 +233,7 @@ function KillCounter:UpdateUI()
     
     -- Display persistent enemies
     for i, enemy in ipairs(sortedPersistentEnemies) do
-        local enemyName = KillCounterEnhancedDB.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
+        local enemyName = self.db.profile.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
         
         local enemyText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         enemyText:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
@@ -246,8 +246,8 @@ function KillCounter:UpdateUI()
         yOffset = yOffset - lineHeight
         
         -- Show loot tracking info if enabled and available
-        if KillCounter.showLoot and KillCounterEnhancedDB.lootTracking[enemy.id] then
-            local tracking = KillCounterEnhancedDB.lootTracking[enemy.id]
+        if KillCounter.showLoot and self.db.profile.lootTracking[enemy.id] then
+            local tracking = self.db.profile.lootTracking[enemy.id]
             local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, enemy.kills)
             
             local lootText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -270,7 +270,7 @@ function KillCounter:UpdateUI()
     
     -- Sort enemies by session kills
     local sortedSessionEnemies = {}
-    for enemyID, kills in pairs(KillCounterEnhancedDB.sessionKills) do
+    for enemyID, kills in pairs(self.db.sessionKills) do
         if kills > 0 then
             table.insert(sortedSessionEnemies, {id = enemyID, kills = kills})
         end
@@ -279,7 +279,7 @@ function KillCounter:UpdateUI()
     
     -- Display session enemies
     for i, enemy in ipairs(sortedSessionEnemies) do
-        local enemyName = KillCounterEnhancedDB.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
+        local enemyName = self.db.profile.enemyNames[enemy.id] or "Unknown (ID: " .. enemy.id .. ")"
         
         local enemyText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         enemyText:SetPoint("TOPLEFT", KillCounter.mainFrame.content, "TOPLEFT", 0, yOffset)
@@ -305,9 +305,9 @@ function KillCounter:UpdateUI()
         
         -- Get all tracked loot
         local trackedLoot = {}
-        for enemyID, tracking in pairs(KillCounterEnhancedDB.lootTracking) do
-            local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-            local kills = KillCounterEnhancedDB.kills[enemyID] or 0
+        for enemyID, tracking in pairs(self.db.profile.lootTracking) do
+            local enemyName = self.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+            local kills = self.db.profile.kills[enemyID] or 0
             local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, kills)
             table.insert(trackedLoot, {
                 enemyID = enemyID,
@@ -329,7 +329,7 @@ function KillCounter:UpdateUI()
             
             local chanceText = KillCounter.mainFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             chanceText:SetPoint("TOPRIGHT", KillCounter.mainFrame.content, "TOPRIGHT", 0, yOffset)
-            chanceText:SetText(string.format("%.2f", loot.dropChance) .. "% (" .. loot.baseChance .. "%)")
+            chanceText:SetText(string.format("%.2f", loot.dropChance) .. "% (" .. loot.baseChance .. ")")
             chanceText:SetTextColor(0, 1, 1)
             
             yOffset = yOffset - lineHeight
@@ -422,8 +422,8 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         if enemyID and baseChance then
             baseChance = tonumber(baseChance)
             if baseChance and baseChance > 0 and baseChance <= 100 then
-                local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-                KillCounterEnhancedDB.lootTracking[enemyID] = {
+                local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+                KillCounter.db.profile.lootTracking[enemyID] = {
                     baseChance = baseChance
                 }
                 print("|cFF00FF00Kill Counter:|r Now tracking loot from " .. enemyName .. " (ID: " .. enemyID .. ", Base chance: " .. baseChance .. "%)")
@@ -438,9 +438,9 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
     elseif string.find(msg, "^untrack ") then
         -- Stop tracking loot for an enemy
         local enemyID = KillCounter:ParseUntrackCommand(msg)
-        if enemyID and KillCounterEnhancedDB.lootTracking[enemyID] then
-            local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-            KillCounterEnhancedDB.lootTracking[enemyID] = nil
+        if enemyID and KillCounter.db.profile.lootTracking[enemyID] then
+            local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+            KillCounter.db.profile.lootTracking[enemyID] = nil
             print("|cFF00FF00Kill Counter:|r Stopped tracking loot from " .. enemyName)
         else
             print("|cFFFF0000Kill Counter:|r Not tracking any loot for enemy ID " .. (enemyID or "invalid"))
@@ -449,9 +449,9 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         -- Show all tracked loot
         print("|cFF00FF00Kill Counter - Tracked Loot:|r")
         local hasTracking = false
-        for enemyID, tracking in pairs(KillCounterEnhancedDB.lootTracking) do
-            local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-            local currentKills = KillCounterEnhancedDB.kills[enemyID] or 0
+        for enemyID, tracking in pairs(KillCounter.db.profile.lootTracking) do
+            local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+            local currentKills = KillCounter.db.profile.kills[enemyID] or 0
             local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, currentKills)
             print("  " .. enemyName .. " (Base: " .. tracking.baseChance .. "%, Current: " .. string.format("%.2f", dropChance) .. "%)")
             hasTracking = true
@@ -463,14 +463,14 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         -- Show kills for specific enemy (by ID)
         local enemyID = tonumber(msg)
         if enemyID then
-            local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-            local persistentKills = KillCounterEnhancedDB.kills[enemyID] or 0
-            local sessionKills = KillCounterEnhancedDB.sessionKills[enemyID] or 0
+            local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+            local persistentKills = KillCounter.db.profile.kills[enemyID] or 0
+            local sessionKills = KillCounter.db.sessionKills[enemyID] or 0
             print("|cFF00FF00Kill Counter:|r " .. enemyName .. " (ID: " .. enemyID .. ") - Persistent Kills: " .. persistentKills .. ", Session Kills: " .. sessionKills)
             
             -- Also show loot tracking info if available
-            if KillCounterEnhancedDB.lootTracking[enemyID] then
-                local tracking = KillCounterEnhancedDB.lootTracking[enemyID]
+            if KillCounter.db.profile.lootTracking[enemyID] then
+                local tracking = KillCounter.db.profile.lootTracking[enemyID]
                 local dropChance = KillCounter:CalculateDropChance(tracking.baseChance, persistentKills)
                 print("  |cFF00FFFFLoot:|r " .. string.format("%.2f", dropChance) .. "% chance")
             end
@@ -481,9 +481,9 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         -- Show all kill counts
         print("|cFF00FF00Kill Counter - Persistent Kills:|r")
         local hasPersistentKills = false
-        for enemyID, kills in pairs(KillCounterEnhancedDB.kills) do
+        for enemyID, kills in pairs(KillCounter.db.profile.kills) do
             if kills > 0 then
-                local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+                local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
                 print("  " .. enemyName .. " - Kills: " .. kills)
                 hasPersistentKills = true
             end
@@ -494,9 +494,9 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
 
         print("\n|cFF00FF00Kill Counter - Session Kills:|r")
         local hasSessionKills = false
-        for enemyID, kills in pairs(KillCounterEnhancedDB.sessionKills) do
+        for enemyID, kills in pairs(KillCounter.db.sessionKills) do
             if kills > 0 then
-                local enemyName = KillCounterEnhancedDB.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
+                local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
                 print("  " .. enemyName .. " - Kills: " .. kills)
                 hasSessionKills = true
             end
@@ -512,21 +512,28 @@ function KillCounter:ShowKillNotification(enemyName)
     UIErrorsFrame:AddMessage("|cFF00FF00Kill Counter:|r Killed " .. enemyName .. "!", 1.0, 1.0, 0)
 end
 
--- Tooltip integration
-GameTooltip:SetScript("OnTooltipSetUnit", function(self)
-    local unit = "mouseover"
-    local guid = UnitGUID(unit)
-    if not guid then return end
+function KillCounter:InitializeTooltip()
+    GameTooltip:SetScript("OnTooltipSetUnit", function(tooltipSelf)
+        local unit = "mouseover"
+        local guid = UnitGUID(unit)
+        if not guid then return end
 
-    local npcID = KillCounter:GetNPCID(guid)
-    if not npcID then return end
+        local npcID = KillCounter:GetNPCID(guid)
+        if not npcID then return end
 
-    local persistentKills = KillCounterEnhancedDB.kills[npcID] or 0
-    local sessionKills = KillCounterEnhancedDB.sessionKills[npcID] or 0
+        local persistentKills = KillCounter.db.profile.kills[npcID] or 0
+        local sessionKills = KillCounter.db.sessionKills[npcID] or 0
 
-    if persistentKills > 0 or sessionKills > 0 then
-        self:AddLine(" ") -- Add a blank line for spacing
-        self:AddDoubleLine("Kills (Overall):", persistentKills, 1, 1, 1, 1, 1, 0)
-        self:AddDoubleLine("Kills (Session):", sessionKills, 1, 1, 1, 1, 1, 0)
-    end
-end)
+        if (KillCounter.db.profile.showOverallKills and persistentKills > 0) or (KillCounter.db.profile.showSessionKills and sessionKills > 0) then
+            tooltipSelf:AddLine(" ") -- Add a blank line for spacing
+        end
+
+        if KillCounter.db.profile.showOverallKills and persistentKills > 0 then
+            tooltipSelf:AddDoubleLine("Kills (Overall):", persistentKills, 1, 1, 1, 1, 1, 0)
+        end
+
+        if KillCounter.db.profile.showSessionKills and sessionKills > 0 then
+            tooltipSelf:AddDoubleLine("Kills (Session):", sessionKills, 1, 1, 1, 1, 1, 0)
+        end
+    end)
+end
