@@ -1,18 +1,23 @@
 # Enhanced Kill Counter - WoW Classic Addon
 
-A feature-rich addon for World of Warcraft Classic that tracks how many enemies of each type you have killed and displays a dashboard on your screen with advanced features.
+A lightweight addon for World of Warcraft Classic that tracks enemy kills, providing both total and session-based statistics. It integrates seamlessly with the game's interface, displaying kill counts directly in unit tooltips and offering detailed reports via slash commands.
 
 ## Features
 
-- **Automatic Kill Tracking**: Automatically counts kills when you defeat enemies
-- **Dashboard Display**: Shows a movable dashboard with your kill statistics
-- **Kill Notifications**: Displays a brief notification when you kill an enemy
-- **Persistent Data**: Your kill data is saved between sessions
-- **Sortable List**: Shows your most killed enemies (configurable limit)
-- **Filtering System**: Search for specific enemies in your kill list
-- **Settings Panel**: Customize notifications, display options, and more
-- **Export Functionality**: Export your kill data for external use
-- **Advanced Controls**: Enhanced slash commands and interface options
+- **Automatic Kill Tracking**: Automatically records kills of enemies by the player or their party/raid.
+- **Total Kill Counts**: Maintains a persistent record of all kills for each unique enemy across game sessions.
+- **Session Kill Counts**: Tracks kills specifically within the current game session, which can be reset.
+- **Tooltip Integration**: Displays total and session kill counts directly in the tooltip when mousing over an enemy unit. This feature can be toggled on or off via the in-game options.
+- **Slash Commands**: Provides a set of intuitive slash commands for managing and viewing kill data:
+    - `/kc` or `/killcounter`: Shows a summary of all total and session kill counts.
+    - `/kc help`: Displays a list of available commands.
+    - `/kc reset all`: Resets all recorded total and session kill data.
+    - `/kc reset session`: Resets only the kill data for the current session.
+    - `/kc [enemyID]`: Shows detailed total and session kill counts for a specific enemy by its NPC ID.
+- **Configuration Options**: Accessible via Blizzard's Interface Options panel, allowing users to:
+    - Enable or disable the Kill Counter addon.
+    - Toggle the display of total kills in unit tooltips.
+    - Toggle the display of session kills in unit tooltips.
 
 ## Installation
 
@@ -25,45 +30,38 @@ A feature-rich addon for World of Warcraft Classic that tracks how many enemies 
    ```
    KillCounter\
    ├── KillCounter.toc
-   ├── KillCounter.lua
+   ├── KillCounter_Core.lua
+   ├── KillCounter_DB.lua
+   ├── KillCounter_Events.lua
+   ├── KillCounter_UI.lua
+   ├── KillCounter_AceConfig.lua
    └── README.md
    ```
 
 3. Restart WoW Classic or reload your UI (`/reload`)
 
-4. The addon should load automatically and you'll see a message: "Enhanced Kill Counter addon loaded. Type /kce for commands."
-
 ## Usage
 
 ### Commands
 
-- `/kce` or `/killcounterenhanced` - Show/hide the kill counter dashboard
-- `/kce show` - Show the dashboard
-- `/kce hide` - Hide the dashboard
-- `/kce reset` - Reset all kill data
-- `/kce settings` - Open settings panel
-- `/kce export` - Export kill data
-- `/kce help` - Show help information
-
-### Interface
-
-- **Dashboard**: A movable window showing your kill statistics
-- **Toggle Button**: A button below the dashboard to show/hide it
-- **Close Button**: X button in the top-right corner of the dashboard
-- **Filter Input**: Search box to filter enemies by name
-- **Sort Button**: Toggle between sorting by kill count or enemy name
-- **Settings Panel**: Configure notifications, display limits, and auto-show options
-- **Export Window**: View and copy your kill data
-- **Drag**: Click and drag the dashboard to move it around the screen
+- `/kc` or `/killcounter` - Show a summary of all total and session kill counts.
+- `/kc help` - Show help information.
+- `/kc reset all` - Reset all total and session kill data.
+- `/kc reset session` - Reset only session kill data.
+- `/kc [enemyID]` - Show kills for a specific enemy by its NPC ID.
 
 ### How It Works
 
-The addon monitors combat log events and automatically detects when you kill an enemy. Each kill is added to your statistics and the dashboard is updated in real-time.
+The addon monitors `COMBAT_LOG_EVENT_UNFILTERED` events and automatically detects when you or your party/raid kill an enemy. Each kill is added to your statistics, and the unit tooltip is updated in real-time when mousing over an enemy.
 
 ## Files
 
 - `KillCounter.toc` - Addon metadata and file references
-- `KillCounter.lua` - Main addon code (enhanced version)
+- `KillCounter_Core.lua` - Core addon functionality and initialization
+- `KillCounter_DB.lua` - Defines the SavedVariables structure (managed by AceDB-3.0)
+- `KillCounter_Events.lua` - Handles combat and game events for kill tracking
+- `KillCounter_UI.lua` - Manages slash commands and tooltip integration
+- `KillCounter_AceConfig.lua` - Defines default settings and configuration options for the in-game interface
 - `README.md` - This documentation file
 
 ## Compatibility
@@ -74,19 +72,14 @@ The addon monitors combat log events and automatically detects when you kill an 
 
 ## Troubleshooting
 
-1. **Addon not loading**: Check that the files are in the correct folder and the TOC file is properly formatted
-2. **Kills not counting**: Make sure you're the one dealing the killing blow to enemies
-3. **Dashboard not showing**: Try `/kc show` or check if the addon is enabled in the addon list
-4. **Data not saving**: The addon uses SavedVariables, which should persist between sessions
+1. **Addon not loading**: Check that the files are in the correct folder and the TOC file is properly formatted.
+2. **Kills not counting**: Ensure you or your party/raid are responsible for the killing blow.
+3. **Tooltip not showing kills**: Check the in-game Interface Options for "Kill Counter" to ensure "Show Total Kills" and "Show Session Kills" are enabled.
+4. **Data not saving**: The addon uses SavedVariables, which should persist between sessions. Ensure no other addons are interfering with SavedVariables.
 
 ## Customization
 
-You can modify the addon by editing `KillCounter.lua`:
-
-- Change the dashboard position by modifying the `SetPoint` calls
-- Adjust the dashboard size by changing the `SetSize` values
-- Modify colors by changing the `SetColorTexture` values
-- Add more features by extending the existing functions
+You can modify the addon by editing the Lua files directly to change behavior or add new features. Familiarity with Lua and the WoW API is recommended.
 
 ## License
 
@@ -94,4 +87,4 @@ This addon is provided as-is for personal use. Feel free to modify and distribut
 
 ## Support
 
-If you encounter any issues or have suggestions for improvements, please check the troubleshooting section above or create an issue in the project repository. 
+If you encounter any issues or have suggestions for improvements, please check the troubleshooting section above or create an issue in the project repository.
