@@ -11,7 +11,7 @@ local KillCounter = AceAddon:GetAddon("KillCounter")
 local defaults = {
     profile = {
         enableKillCounter = true,
-        showOverallKills = true,
+        showTotalKills = true,
         showSessionKills = true,
         kills = {},
         enemyNames = {},
@@ -35,12 +35,12 @@ local options = {
                     set = function(info, value) KillCounter.db.profile.enableKillCounter = value end,
                     order = 1,
                 },
-                showOverallKills = {
+                showTotalKills = {
                     type = "toggle",
                     name = "Show Total Kills",
                     desc = "Displays the total number of kills for a mob in the tooltip",
-                    get = function(info) return KillCounter.db.profile.showOverallKills end,
-                    set = function(info, value) KillCounter.db.profile.showOverallKills = value end,
+                    get = function(info) return KillCounter.db.profile.showTotalKills end,
+                    set = function(info, value) KillCounter.db.profile.showTotalKills = value end,
                     order = 2,
                 },
                 showSessionKills = {
@@ -51,6 +51,20 @@ local options = {
                     set = function(info, value) KillCounter.db.profile.showSessionKills = value end,
                     order = 2,
                 },
+                resetSession = {
+                    type = "execute",
+                    name = "Reset Session",
+                    desc = "Clears all the kill counters for the current session",
+                    func = function(info, value) KillCounter:ResetSessionKills() end,
+                    order = 3,
+                },
+                resetTotal = {
+                    type = "execute",
+                    name = "Reset All",
+                    desc = "Clears all the kill counters",
+                    func = function(info, value) StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
+                    order = 4,
+                }
             },
         },
     },
@@ -62,3 +76,16 @@ function KillCounter:OnAce3Initialize()
     AceConfig:RegisterOptionsTable("KillCounter", options)
     AceConfigDialog:AddToBlizOptions("KillCounter", "Kill Counter")
 end
+
+StaticPopupDialogs["KILL_COUNTER_RESET_ALL"] = {
+  text = "This will delete all the data you have about enemies. Are you sure you want to continue?",
+  button1 = "Yes",
+  button2 = "No",
+  OnAccept = function()
+      KillCounter:ResetAllKills()
+  end,
+  timeout = 0,
+  whileDead = true,
+  hideOnEscape = true,
+  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+}

@@ -40,6 +40,12 @@ end
 
 function KillCounter:ResetSessionKills()
     self.db.sessionKills = {}
-    self:UpdateUI()
     print("|cFF00FF00KillCounter:|r Session kill data reset.")
+end
+
+function KillCounter:ResetAllKills()
+  self.db.profile.kills = {}
+  self.db.profile.enemyNames = {}
+  self.db.sessionKills = {}
+  print("|cFF00FF00KillCounter:|r All data reset.")
 end
