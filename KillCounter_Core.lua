@@ -15,10 +15,8 @@ end
 function KillCounter:OnInitialize()
     self:OnAce3Initialize() -- Call the Ace3 initialization from KillCounter_AceConfig.lua
     self.db.sessionKills = {} -- Initialize session kills
-    self:RegisterEvents()
-    self:CreateUI()
     self:InitializeTooltip()
-    print("|cFF00FF00Kill Counter|r loaded. Type /kc for commands.")
+    self:RegisterEvents()
 end
 
 function KillCounter:AddKill(npcID, enemyName)
@@ -30,9 +28,6 @@ function KillCounter:AddKill(npcID, enemyName)
 
     -- Session kills
     self.db.sessionKills[npcID] = (self.db.sessionKills[npcID] or 0) + 1
-
-    self:UpdateUI()
-    self:ShowKillNotification(enemyName)
 end
 
 function KillCounter:GetSessionKillCount(npcID)
@@ -48,4 +43,3 @@ function KillCounter:ResetSessionKills()
     self:UpdateUI()
     print("|cFF00FF00KillCounter:|r Session kill data reset.")
 end
-
