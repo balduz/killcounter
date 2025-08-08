@@ -22,7 +22,7 @@ end
 function KillCounter:AddKill(npcID, enemyName)
     if not npcID then return end
 
-    -- Persistent kills
+    -- Total kills
     self.db.profile.kills[npcID] = (self.db.profile.kills[npcID] or 0) + 1
     self.db.profile.enemyNames[npcID] = enemyName
 
