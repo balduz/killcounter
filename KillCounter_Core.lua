@@ -17,6 +17,7 @@ function KillCounter:OnInitialize()
     self.db.sessionKills = {} -- Initialize session kills
     self:InitializeTooltip()
     self:RegisterEvents()
+    self:CreateDashboard()
 end
 
 function KillCounter:AddKill(npcID, enemyName)
@@ -48,4 +49,36 @@ function KillCounter:ResetAllKills()
   self.db.profile.enemyNames = {}
   self.db.sessionKills = {}
   print("|cFF00FF00KillCounter:|r All data reset.")
+end
+
+function KillCounter:GetKillTotals()
+    local totalKills = 0
+    for _, count in pairs(self.db.profile.kills) do
+        totalKills = totalKills + count
+    end
+
+    local sessionKills = 0
+    for _, count in pairs(self.db.sessionKills) do
+        sessionKills = sessionKills + count
+    end
+
+    return totalKills, sessionKills
+end
+
+function KillCounter:GetTopKills(killsTable, count)
+    local sortedKills = {}
+    for npcID, kills in pairs(killsTable) do
+        table.insert(sortedKills, {npcID, kills})
+    end
+
+    table.sort(sortedKills, function(a, b)
+        return a[2] > b[2]
+    end)
+
+    local topKills = {}
+    for i = 1, math.min(count, #sortedKills) do
+        table.insert(topKills, sortedKills[i])
+    end
+
+    return topKills
 end

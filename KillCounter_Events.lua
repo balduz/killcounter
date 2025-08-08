@@ -38,6 +38,7 @@ function KillCounter:OnCombatEvent()
             if self.mainFrame and self.mainFrame:IsShown() then
                 self:UpdateUI()
             end
+            self:UpdateDashboard()
         end
     end
 end

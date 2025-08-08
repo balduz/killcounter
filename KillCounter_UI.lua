@@ -8,9 +8,12 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
         print("|cFF00FF00Kill Counter Commands:|r")
         print("/kc - Show all kill counts")
         print("/kc help - Show this help")
+        print("/kc dashboard - Toggle the dashboard")
         print("/kc reset all - Reset all kill data")
         print("/kc reset session - Reset session kill data")
         print("/kc [enemyID] - Show kills for specific enemy")
+    elseif msg == "dashboard" then
+        KillCounter:ToggleDashboard()
     elseif msg == "reset all" then
         KillCounter:ResetAllKills()
     elseif msg == "reset session" then

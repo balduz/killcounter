@@ -10,4 +10,5 @@ KillCounter_Core.lua
 KillCounter_DB.lua
 KillCounter_Events.lua
 KillCounter_UI.lua
+KillCounter_Dashboard.lua
 KillCounter_AceConfig.lua
