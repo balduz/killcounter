@@ -1,4 +1,3 @@
-
 local AceAddon = LibStub("AceAddon-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
@@ -14,6 +13,7 @@ local defaults = {
         showTotalKills = true,
         showSessionKills = true,
         showDashboard = true,
+        dashboardLocked = false,
         kills = {},
         enemyNames = {},
     }
@@ -67,19 +67,30 @@ local options = {
                     end,
                     order = 4,
                 },
+                dashboardLocked = {
+                    type = "toggle",
+                    name = "Lock Dashboard",
+                    desc = "Toggles whether the dashboard can be moved.",
+                    get = function(info) return KillCounter.db.profile.dashboardLocked end,
+                    set = function(info, value)
+                        KillCounter.db.profile.dashboardLocked = value
+                        KillCounter:SetDashboardLocked(value)
+                    end,
+                    order = 5,
+                },
                 resetSession = {
                     type = "execute",
                     name = "Reset Session",
                     desc = "Clears all the kill counters for the current session",
                     func = function(info, value) KillCounter:ResetSessionKills() end,
-                    order = 5,
+                    order = 6,
                 },
                 resetTotal = {
                     type = "execute",
                     name = "Reset All",
                     desc = "Clears all the kill counters",
                     func = function(info, value) StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                    order = 6,
+                    order = 7,
                 }
             },
         },

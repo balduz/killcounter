@@ -87,6 +87,18 @@ function KillCounter:CreateDashboard()
         self.sessionKillsLines[i] = { name = name, count = count }
         lastAnchor = name
     end
+
+    self:SetDashboardLocked(self.db.profile.dashboardLocked)
+end
+
+function KillCounter:SetDashboardLocked(locked)
+    if locked then
+        self.dashboardFrame:SetMovable(false)
+        self.dashboardFrame:EnableMouse(false)
+    else
+        self.dashboardFrame:SetMovable(true)
+        self.dashboardFrame:EnableMouse(true)
+    end
 end
 
 function KillCounter:UpdateDashboard()
