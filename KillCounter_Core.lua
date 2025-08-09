@@ -18,6 +18,11 @@ function KillCounter:OnInitialize()
     self:InitializeTooltip()
     self:RegisterEvents()
     self:CreateDashboard()
+
+    if self.db.profile.showDashboard then
+        self.dashboardFrame:Show()
+        self:UpdateDashboard()
+    end
 end
 
 function KillCounter:AddKill(npcID, enemyName)

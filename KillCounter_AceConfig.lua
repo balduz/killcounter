@@ -1,4 +1,3 @@
-
 local AceAddon = LibStub("AceAddon-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
@@ -13,6 +12,7 @@ local defaults = {
         enableKillCounter = true,
         showTotalKills = true,
         showSessionKills = true,
+        showDashboard = true,
         kills = {},
         enemyNames = {},
     }
@@ -49,21 +49,29 @@ local options = {
                     desc = "Displays the number of kills for a mob in the current session in the tooltip",
                     get = function(info) return KillCounter.db.profile.showSessionKills end,
                     set = function(info, value) KillCounter.db.profile.showSessionKills = value end,
-                    order = 2,
+                    order = 3,
+                },
+                showDashboard = {
+                    type = "toggle",
+                    name = "Show Dashboard on Startup",
+                    desc = "If enabled, the dashboard will be shown when you log in.",
+                    get = function(info) return KillCounter.db.profile.showDashboard end,
+                    set = function(info, value) KillCounter.db.profile.showDashboard = value end,
+                    order = 4,
                 },
                 resetSession = {
                     type = "execute",
                     name = "Reset Session",
                     desc = "Clears all the kill counters for the current session",
                     func = function(info, value) KillCounter:ResetSessionKills() end,
-                    order = 3,
+                    order = 5,
                 },
                 resetTotal = {
                     type = "execute",
                     name = "Reset All",
                     desc = "Clears all the kill counters",
                     func = function(info, value) StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                    order = 4,
+                    order = 6,
                 }
             },
         },

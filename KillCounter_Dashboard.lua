@@ -6,8 +6,8 @@ local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
-    self.dashboardFrame:SetSize(220, 320) -- Narrower and adjusted height
-    self.dashboardFrame:SetPoint("CENTER")
+    self.dashboardFrame:SetSize(220, 200) -- Adjusted height
+    self.dashboardFrame:SetPoint("LEFT", 20, 0)
     self.dashboardFrame:SetMovable(true)
     self.dashboardFrame:EnableMouse(true)
     self.dashboardFrame:SetClampedToScreen(true)
@@ -17,69 +17,80 @@ function KillCounter:CreateDashboard()
     self.dashboardFrame:SetBackdrop({
         bgFile = "Interface/DialogFrame/UI-DialogBox-Background",
         edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
-        tile = true,
-        tileSize = 32,
-        edgeSize = 16,
+        tile = true, tileSize = 32, edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 }
     })
-    self.dashboardFrame:SetBackdropColor(0, 0, 0, 0.7) -- Black, 70% transparent
+    self.dashboardFrame:SetBackdropColor(0, 0, 0, 0.7)
     self.dashboardFrame:Hide()
 
     -- Title
     local title = self.dashboardFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -15)
     title:SetText("Kill Counter")
-    title:SetTextColor(1, 1, 0) -- Yellow
+    title:SetTextColor(1, 1, 0)
 
     -- Close button
     local closeButton = CreateFrame("Button", nil, self.dashboardFrame, "UIPanelCloseButton")
     closeButton:SetPoint("TOPRIGHT", -5, -5)
     closeButton:SetScript("OnClick", function() KillCounter.dashboardFrame:Hide() end)
 
-    -- Totals section
-    local totalsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
-    totalsFrame:SetSize(200, 40)
-    totalsFrame:SetPoint("TOP", 0, -50)
-
-    self.totalKillsText = totalsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.totalKillsText:SetPoint("TOPLEFT", 10, -10)
-    self.totalKillsText:SetTextColor(0.8, 0.8, 0.8) -- Light Gray
-
-    self.sessionKillsText = totalsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.sessionKillsText:SetPoint("TOPRIGHT", -10, -10)
-    self.sessionKillsText:SetTextColor(0.8, 0.8, 0.8) -- Light Gray
-
-    -- Single column for kills
+    -- Kills frame
     local killsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
-    killsFrame:SetSize(200, 220)
-    killsFrame:SetPoint("TOP", 0, -90)
+    killsFrame:SetSize(200, 160)
+    killsFrame:SetPoint("TOP", 0, -40)
 
-    -- Top 3 Total Kills
-    local totalKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    totalKillsTitle:SetPoint("TOP", 0, -5)
-    totalKillsTitle:SetText("Top 3 Total Kills")
-    totalKillsTitle:SetTextColor(1, 1, 0.6) -- Lighter Yellow
+    -- Total Kills Section
+    self.totalKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    self.totalKillsTitle:SetPoint("TOPLEFT", 10, -10)
+    self.totalKillsTitle:SetText("Total")
+    self.totalKillsTitle:SetTextColor(1, 1, 0.6)
+
+    self.totalKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    self.totalKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+    self.totalKillsCount:SetPoint("TOP", self.totalKillsTitle, "TOP")
+    self.totalKillsCount:SetJustifyH("RIGHT")
 
     self.totalKillsLines = {}
+    local lastAnchor = self.totalKillsTitle
     for i = 1, 3 do
-        local line = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        line:SetPoint("TOPLEFT", 10, -30 - ((i - 1) * 20))
-        line:SetTextColor(1, 1, 1) -- White
-        self.totalKillsLines[i] = line
+        local name = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
+        name:SetTextColor(1, 1, 1)
+
+        local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+        count:SetPoint("TOP", name, "TOP")
+        count:SetJustifyH("RIGHT")
+
+        self.totalKillsLines[i] = { name = name, count = count }
+        lastAnchor = name
     end
 
-    -- Top 3 Session Kills
-    local sessionKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    sessionKillsTitle:SetPoint("TOP", 0, -105)
-    sessionKillsTitle:SetText("Top 3 Session Kills")
-    sessionKillsTitle:SetTextColor(1, 1, 0.6) -- Lighter Yellow
+    -- Session Kills Section
+    self.sessionKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    self.sessionKillsTitle:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -15)
+    self.sessionKillsTitle:SetText("Session")
+    self.sessionKillsTitle:SetTextColor(1, 1, 0.6)
+
+    self.sessionKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    self.sessionKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+    self.sessionKillsCount:SetPoint("TOP", self.sessionKillsTitle, "TOP")
+    self.sessionKillsCount:SetJustifyH("RIGHT")
 
     self.sessionKillsLines = {}
+    lastAnchor = self.sessionKillsTitle
     for i = 1, 3 do
-        local line = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        line:SetPoint("TOPLEFT", 10, -130 - ((i - 1) * 20))
-        line:SetTextColor(1, 1, 1) -- White
-        self.sessionKillsLines[i] = line
+        local name = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
+        name:SetTextColor(1, 1, 1)
+
+        local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+        count:SetPoint("TOP", name, "TOP")
+        count:SetJustifyH("RIGHT")
+
+        self.sessionKillsLines[i] = { name = name, count = count }
+        lastAnchor = name
     end
 end
 
@@ -88,34 +99,35 @@ function KillCounter:UpdateDashboard()
         return
     end
 
-    -- Update totals
     local totalKills, sessionKills = self:GetKillTotals()
-    self.totalKillsText:SetText("Total: " .. totalKills)
-    self.sessionKillsText:SetText("Session: " .. sessionKills)
+    self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
+    self.sessionKillsCount:SetText(string.format("|cFF87CEEB%d|r", sessionKills))
 
-    -- Update top 3 total kills
     local topTotalKills = self:GetTopKills(self.db.profile.kills, 3)
     for i = 1, 3 do
         local line = self.totalKillsLines[i]
         if topTotalKills[i] then
             local npcID, count = topTotalKills[i][1], topTotalKills[i][2]
             local enemyName = self.db.profile.enemyNames[npcID] or "Unknown"
-            line:SetText(string.format("%s: |cFFFFD100%d|r", enemyName, count))
+            line.name:SetText(string.format("%d. %s:", i, enemyName))
+            line.count:SetText(string.format("|cFFFFD100%d|r", count))
         else
-            line:SetText("")
+            line.name:SetText("")
+            line.count:SetText("")
         end
     end
 
-    -- Update top 3 session kills
     local topSessionKills = self:GetTopKills(self.db.sessionKills, 3)
     for i = 1, 3 do
         local line = self.sessionKillsLines[i]
         if topSessionKills[i] then
             local npcID, count = topSessionKills[i][1], topSessionKills[i][2]
             local enemyName = self.db.profile.enemyNames[npcID] or "Unknown"
-            line:SetText(string.format("%s: |cFFFFD100%d|r", enemyName, count))
+            line.name:SetText(string.format("%d. %s:", i, enemyName))
+            line.count:SetText(string.format("|cFFFFD100%d|r", count))
         else
-            line:SetText("")
+            line.name:SetText("")
+            line.count:SetText("")
         end
     end
 end
