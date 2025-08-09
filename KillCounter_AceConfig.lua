@@ -1,3 +1,4 @@
+
 local AceAddon = LibStub("AceAddon-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
@@ -14,6 +15,7 @@ local defaults = {
         showSessionKills = true,
         showDashboard = true,
         dashboardLocked = false,
+        dashboardOpacity = 0.7,
         kills = {},
         enemyNames = {},
     }
@@ -78,19 +80,33 @@ local options = {
                     end,
                     order = 5,
                 },
+                dashboardOpacity = {
+                    type = "range",
+                    name = "Dashboard Opacity",
+                    desc = "Adjusts the background opacity of the dashboard.",
+                    min = 0,
+                    max = 1,
+                    step = 0.1,
+                    get = function(info) return KillCounter.db.profile.dashboardOpacity end,
+                    set = function(info, value)
+                        KillCounter.db.profile.dashboardOpacity = value
+                        KillCounter:SetDashboardOpacity(value)
+                    end,
+                    order = 6,
+                },
                 resetSession = {
                     type = "execute",
                     name = "Reset Session",
                     desc = "Clears all the kill counters for the current session",
                     func = function(info, value) KillCounter:ResetSessionKills() end,
-                    order = 6,
+                    order = 7,
                 },
                 resetTotal = {
                     type = "execute",
                     name = "Reset All",
                     desc = "Clears all the kill counters",
                     func = function(info, value) StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                    order = 7,
+                    order = 8,
                 }
             },
         },

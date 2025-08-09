@@ -20,7 +20,6 @@ function KillCounter:CreateDashboard()
         tile = true, tileSize = 32, edgeSize = 16,
         insets = { left = 4, right = 4, top = 4, bottom = 4 }
     })
-    self.dashboardFrame:SetBackdropColor(0, 0, 0, 0.7)
     self.dashboardFrame:Hide()
 
     -- Title
@@ -89,6 +88,7 @@ function KillCounter:CreateDashboard()
     end
 
     self:SetDashboardLocked(self.db.profile.dashboardLocked)
+    self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
 end
 
 function KillCounter:SetDashboardLocked(locked)
@@ -99,6 +99,10 @@ function KillCounter:SetDashboardLocked(locked)
         self.dashboardFrame:SetMovable(true)
         self.dashboardFrame:EnableMouse(true)
     end
+end
+
+function KillCounter:SetDashboardOpacity(opacity)
+    self.dashboardFrame:SetBackdropColor(0, 0, 0, opacity)
 end
 
 function KillCounter:UpdateDashboard()
