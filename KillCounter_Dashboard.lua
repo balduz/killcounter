@@ -6,7 +6,7 @@ local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
-    self.dashboardFrame:SetSize(220, 200) -- Adjusted height
+    self.dashboardFrame:SetSize(220, 180) -- Adjusted height
     self.dashboardFrame:SetPoint("LEFT", 20, 0)
     self.dashboardFrame:SetMovable(true)
     self.dashboardFrame:EnableMouse(true)
@@ -24,24 +24,24 @@ function KillCounter:CreateDashboard()
     self.dashboardFrame:Hide()
 
     -- Title
-    local title = self.dashboardFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -15)
+    local title = self.dashboardFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    title:SetPoint("TOPLEFT", 15, -10)
     title:SetText("Kill Counter")
     title:SetTextColor(1, 1, 0)
 
     -- Kills frame
     local killsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
-    killsFrame:SetSize(200, 160)
-    killsFrame:SetPoint("TOP", 0, -40)
+    killsFrame:SetSize(200, 140)
+    killsFrame:SetPoint("TOPLEFT", 0, -35)
 
     -- Total Kills Section
     self.totalKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.totalKillsTitle:SetPoint("TOPLEFT", 10, -10)
+    self.totalKillsTitle:SetPoint("TOPLEFT", 15, 0)
     self.totalKillsTitle:SetText("Total")
     self.totalKillsTitle:SetTextColor(1, 1, 0.6)
 
     self.totalKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.totalKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+    self.totalKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
     self.totalKillsCount:SetPoint("TOP", self.totalKillsTitle, "TOP")
     self.totalKillsCount:SetJustifyH("RIGHT")
 
@@ -53,7 +53,7 @@ function KillCounter:CreateDashboard()
         name:SetTextColor(1, 1, 1)
 
         local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
         count:SetPoint("TOP", name, "TOP")
         count:SetJustifyH("RIGHT")
 
@@ -68,7 +68,7 @@ function KillCounter:CreateDashboard()
     self.sessionKillsTitle:SetTextColor(1, 1, 0.6)
 
     self.sessionKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.sessionKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+    self.sessionKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
     self.sessionKillsCount:SetPoint("TOP", self.sessionKillsTitle, "TOP")
     self.sessionKillsCount:SetJustifyH("RIGHT")
 
@@ -80,7 +80,7 @@ function KillCounter:CreateDashboard()
         name:SetTextColor(1, 1, 1)
 
         local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", -10, 0)
+        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
         count:SetPoint("TOP", name, "TOP")
         count:SetJustifyH("RIGHT")
 
