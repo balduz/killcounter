@@ -3,10 +3,10 @@ SLASH_KILLCOUNTER1 = "/kc"
 SLASH_KILLCOUNTER2 = "/killcounter"
 SlashCmdList["KILLCOUNTER"] = function(msg)
     msg = string.lower(msg)
-    
+
     if msg == "help" then
         print("|cFF00FF00Kill Counter Commands:|r")
-        print("/kc - Show all kill counts")
+        print("/kc - Opens the configuration panel")
         print("/kc help - Show this help")
         print("/kc reset all - Reset all kill data")
         print("/kc reset session - Reset session kill data")
@@ -27,32 +27,8 @@ SlashCmdList["KILLCOUNTER"] = function(msg)
             print("|cFFFF0000Kill Counter:|r Invalid enemy ID. Use a number.")
         end
     else
-        -- Show all kill counts
-        print("|cFF00FF00Kill Counter - Total Kills:|r")
-        local hasTotalKills = false
-        for enemyID, kills in pairs(KillCounter.db.profile.kills) do
-            if kills > 0 then
-                local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-                print("  " .. enemyName .. " - Kills: " .. kills)
-                hasTotalKills = true
-            end
-        end
-        if not hasTotalKills then
-            print("  No total kills recorded yet")
-        end
-
-        print("\n|cFF00FF00Kill Counter - Session Kills:|r")
-        local hasSessionKills = false
-        for enemyID, kills in pairs(KillCounter.db.sessionKills) do
-            if kills > 0 then
-                local enemyName = KillCounter.db.profile.enemyNames[enemyID] or "Unknown (ID: " .. enemyID .. ")"
-                print("  " .. enemyName .. ": " .. kills)
-                hasSessionKills = true
-            end
-        end
-        if not hasSessionKills then
-            print("  No session kills recorded yet")
-        end
+        -- Open the config panel
+        LibStub("AceConfigDialog-3.0"):Open("KillCounter")
     end
 end
 
