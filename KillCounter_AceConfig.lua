@@ -1,3 +1,4 @@
+
 local AceAddon = LibStub("AceAddon-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
@@ -53,10 +54,17 @@ local options = {
                 },
                 showDashboard = {
                     type = "toggle",
-                    name = "Show Dashboard on Startup",
-                    desc = "If enabled, the dashboard will be shown when you log in.",
+                    name = "Show Dashboard",
+                    desc = "Toggles the dashboard visibility.",
                     get = function(info) return KillCounter.db.profile.showDashboard end,
-                    set = function(info, value) KillCounter.db.profile.showDashboard = value end,
+                    set = function(info, value)
+                        KillCounter.db.profile.showDashboard = value
+                        if value then
+                            KillCounter:ToggleDashboard(true)
+                        else
+                            KillCounter:ToggleDashboard(false)
+                        end
+                    end,
                     order = 4,
                 },
                 resetSession = {

@@ -29,11 +29,6 @@ function KillCounter:CreateDashboard()
     title:SetText("Kill Counter")
     title:SetTextColor(1, 1, 0)
 
-    -- Close button
-    local closeButton = CreateFrame("Button", nil, self.dashboardFrame, "UIPanelCloseButton")
-    closeButton:SetPoint("TOPRIGHT", -5, -5)
-    closeButton:SetScript("OnClick", function() KillCounter.dashboardFrame:Hide() end)
-
     -- Kills frame
     local killsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
     killsFrame:SetSize(200, 160)
@@ -132,11 +127,15 @@ function KillCounter:UpdateDashboard()
     end
 end
 
-function KillCounter:ToggleDashboard()
-    if self.dashboardFrame:IsShown() then
-        self.dashboardFrame:Hide()
-    else
+function KillCounter:ToggleDashboard(show)
+    if show == nil then
+        show = not self.dashboardFrame:IsShown()
+    end
+
+    if show then
         self.dashboardFrame:Show()
         self:UpdateDashboard()
+    else
+        self.dashboardFrame:Hide()
     end
 end
