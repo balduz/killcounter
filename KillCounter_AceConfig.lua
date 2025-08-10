@@ -15,7 +15,11 @@ local defaults = {
         showSessionKills = true,
         showDashboard = true,
         dashboardLocked = false,
+        dashboardResizeLocked = false,
         dashboardOpacity = 0.7,
+        dashboardFontSize = 12,
+        dashboardWidth = 220,
+        dashboardHeight = 180,
         dashboardPosition = {},
         kills = {},
         enemyNames = {},
@@ -81,6 +85,17 @@ local options = {
                     end,
                     order = 5,
                 },
+                dashboardResizeLocked = {
+                    type = "toggle",
+                    name = "Lock Dashboard Size",
+                    desc = "Toggles whether the dashboard can be resized.",
+                    get = function(info) return KillCounter.db.profile.dashboardResizeLocked end,
+                    set = function(info, value)
+                        KillCounter.db.profile.dashboardResizeLocked = value
+                        KillCounter:SetDashboardResizeLocked(value)
+                    end,
+                    order = 6,
+                },
                 dashboardOpacity = {
                     type = "range",
                     name = "Dashboard Opacity",
@@ -93,21 +108,35 @@ local options = {
                         KillCounter.db.profile.dashboardOpacity = value
                         KillCounter:SetDashboardOpacity(value)
                     end,
-                    order = 6,
+                    order = 7,
+                },
+                dashboardFontSize = {
+                    type = "range",
+                    name = "Dashboard Font Size",
+                    desc = "Adjusts the font size of the dashboard.",
+                    min = 8,
+                    max = 20,
+                    step = 1,
+                    get = function(info) return KillCounter.db.profile.dashboardFontSize end,
+                    set = function(info, value)
+                        KillCounter.db.profile.dashboardFontSize = value
+                        KillCounter:SetDashboardFontSize(value)
+                    end,
+                    order = 8,
                 },
                 resetSession = {
                     type = "execute",
                     name = "Reset Session",
                     desc = "Clears all the kill counters for the current session",
                     func = function(info, value) KillCounter:ResetSessionKills() end,
-                    order = 7,
+                    order = 9,
                 },
                 resetTotal = {
                     type = "execute",
                     name = "Reset All",
                     desc = "Clears all the kill counters",
                     func = function(info, value) StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                    order = 8,
+                    order = 10,
                 }
             },
         },

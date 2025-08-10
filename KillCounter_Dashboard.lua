@@ -15,7 +15,7 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
     title:SetTextColor(1, 1, 0.6)
 
     local countLabel = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    countLabel:SetPoint("TOPRIGHT", parent, "RIGHT", 0, 0)
+    countLabel:SetPoint("TOPRIGHT", parent, "RIGHT", -15, 0)
     countLabel:SetPoint("TOP", title, "TOP")
     countLabel:SetJustifyH("RIGHT")
     
@@ -26,7 +26,7 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
         name:SetTextColor(1, 1, 1)
 
         local count = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        count:SetPoint("TOPRIGHT", parent, "RIGHT", 0, 0)
+        count:SetPoint("TOPRIGHT", parent, "RIGHT", -15, 0)
         count:SetPoint("TOP", name, "TOP")
         count:SetJustifyH("RIGHT")
 
@@ -34,13 +34,13 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
         lastAnchor = name
     end
 
-    return countLabel, lastAnchor
+    return countLabel, lastAnchor, title
 end
 
 function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
-    self.dashboardFrame:SetSize(220, 180) -- Adjusted height
+    self.dashboardFrame:SetSize(self.db.profile.dashboardWidth, self.db.profile.dashboardHeight)
     
     -- Load position or set default
     local pos = self.db.profile.dashboardPosition
@@ -51,6 +51,7 @@ function KillCounter:CreateDashboard()
     end
 
     self.dashboardFrame:SetMovable(true)
+    self.dashboardFrame:SetResizable(true)
     self.dashboardFrame:EnableMouse(true)
     self.dashboardFrame:SetClampedToScreen(true)
     self.dashboardFrame:RegisterForDrag("LeftButton")
@@ -68,26 +69,51 @@ function KillCounter:CreateDashboard()
     self.dashboardFrame:Hide()
 
     -- Title
-    local title = self.dashboardFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    title:SetPoint("TOPLEFT", 15, -10)
-    title:SetText("Kill Counter")
-    title:SetTextColor(1, 1, 0)
+    self.dashboardTitle = self.dashboardFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    self.dashboardTitle:SetPoint("TOPLEFT", 15, -10)
+    self.dashboardTitle:SetText("Kill Counter")
+    self.dashboardTitle:SetTextColor(1, 1, 0)
 
     -- Kills frame
     local killsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
-    killsFrame:SetSize(200, 140)
     killsFrame:SetPoint("TOPLEFT", 0, -35)
+    killsFrame:SetPoint("BOTTOMRIGHT", self.dashboardFrame, "BOTTOMRIGHT", 0, 0)
+
 
     -- Create Total and Session Kills sections
     self.totalKillsLines = {}
     local lastAnchor
-    self.totalKillsCount, lastAnchor = CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
+    self.totalKillsCount, lastAnchor, self.totalKillsTitle = CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
 
     self.sessionKillsLines = {}
-    self.sessionKillsCount, _ = CreateKillSection(killsFrame, lastAnchor, "Session", -15, self.sessionKillsCount, self.sessionKillsLines)
+    self.sessionKillsCount, _, self.sessionKillsTitle = CreateKillSection(killsFrame, lastAnchor, "Session", -15, self.sessionKillsCount, self.sessionKillsLines)
+
+    -- Resize Handle
+    self.resizeHandle = CreateFrame("Frame", nil, self.dashboardFrame)
+    self.resizeHandle:SetSize(16, 16)
+    self.resizeHandle:SetPoint("BOTTOMRIGHT", self.dashboardFrame, "BOTTOMRIGHT", 0, 0)
+    self.resizeHandle:EnableMouse(true)
+
+    local resizeTexture = self.resizeHandle:CreateTexture(nil, "ARTWORK")
+    resizeTexture:SetTexture("Interface\\CHATFRAME\\UI-ChatIM-SizeGrabber-Up")
+    resizeTexture:SetAllPoints(self.resizeHandle)
+
+    self.resizeHandle:SetScript("OnMouseDown", function(frame, button)
+        if button == "LeftButton" then
+            self.dashboardFrame:StartSizing("BOTTOMRIGHT")
+        end
+    end)
+    self.resizeHandle:SetScript("OnMouseUp", function(frame, button)
+        if button == "LeftButton" then
+            self.dashboardFrame:StopMovingOrSizing()
+            self:SaveDashboardSize()
+        end
+    end)
 
     self:SetDashboardLocked(self.db.profile.dashboardLocked)
+    self:SetDashboardResizeLocked(self.db.profile.dashboardResizeLocked)
     self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
+    self:SetDashboardFontSize(self.db.profile.dashboardFontSize)
 end
 
 function KillCounter:SaveDashboardPosition()
@@ -100,6 +126,12 @@ function KillCounter:SaveDashboardPosition()
     }
 end
 
+function KillCounter:SaveDashboardSize()
+    local width, height = self.dashboardFrame:GetSize()
+    self.db.profile.dashboardWidth = width
+    self.db.profile.dashboardHeight = height
+end
+
 function KillCounter:SetDashboardLocked(locked)
     if locked then
         self.dashboardFrame:SetMovable(false)
@@ -110,9 +142,36 @@ function KillCounter:SetDashboardLocked(locked)
     end
 end
 
+function KillCounter:SetDashboardResizeLocked(locked)
+    if locked then
+        self.resizeHandle:Hide()
+    else
+        self.resizeHandle:Show()
+    end
+end
+
 function KillCounter:SetDashboardOpacity(opacity)
     self.dashboardFrame:SetBackdropColor(0, 0, 0, opacity)
 end
+
+function KillCounter:SetDashboardFontSize(size)
+    local fontName, _, fontFlags = self.dashboardTitle:GetFont()
+    self.dashboardTitle:SetFont(fontName, size + 2, fontFlags)
+    
+    self.totalKillsTitle:SetFont(fontName, size, fontFlags)
+    self.totalKillsCount:SetFont(fontName, size, fontFlags)
+    
+    self.sessionKillsTitle:SetFont(fontName, size, fontFlags)
+    self.sessionKillsCount:SetFont(fontName, size, fontFlags)
+
+    for i = 1, 3 do
+        self.totalKillsLines[i].name:SetFont(fontName, size - 2, fontFlags)
+        self.totalKillsLines[i].count:SetFont(fontName, size - 2, fontFlags)
+        self.sessionKillsLines[i].name:SetFont(fontName, size - 2, fontFlags)
+        self.sessionKillsLines[i].count:SetFont(fontName, size - 2, fontFlags)
+    end
+end
+
 
 function KillCounter:UpdateDashboard()
     if not self.dashboardFrame or not self.dashboardFrame:IsShown() then
