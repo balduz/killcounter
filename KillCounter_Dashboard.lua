@@ -7,13 +7,24 @@ function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
     self.dashboardFrame:SetSize(220, 180) -- Adjusted height
-    self.dashboardFrame:SetPoint("LEFT", 20, 0)
+    
+    -- Load position or set default
+    local pos = self.db.profile.dashboardPosition
+    if pos and pos.point then
+        self.dashboardFrame:SetPoint(pos.point, UIParent, pos.relativePoint, pos.xOfs, pos.yOfs)
+    else
+        self.dashboardFrame:SetPoint("LEFT", 20, 0)
+    end
+
     self.dashboardFrame:SetMovable(true)
     self.dashboardFrame:EnableMouse(true)
     self.dashboardFrame:SetClampedToScreen(true)
     self.dashboardFrame:RegisterForDrag("LeftButton")
     self.dashboardFrame:SetScript("OnDragStart", self.dashboardFrame.StartMoving)
-    self.dashboardFrame:SetScript("OnDragStop", self.dashboardFrame.StopMovingOrSizing)
+    self.dashboardFrame:SetScript("OnDragStop", function(frame)
+        frame:StopMovingOrSizing()
+        self:SaveDashboardPosition()
+    end)
     self.dashboardFrame:SetBackdrop({
         bgFile = "Interface/DialogFrame/UI-DialogBox-Background",
         edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
@@ -89,6 +100,16 @@ function KillCounter:CreateDashboard()
 
     self:SetDashboardLocked(self.db.profile.dashboardLocked)
     self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
+end
+
+function KillCounter:SaveDashboardPosition()
+    local point, _, relativePoint, xOfs, yOfs = self.dashboardFrame:GetPoint()
+    self.db.profile.dashboardPosition = {
+        point = point,
+        relativePoint = relativePoint,
+        xOfs = xOfs,
+        yOfs = yOfs,
+    }
 end
 
 function KillCounter:SetDashboardLocked(locked)

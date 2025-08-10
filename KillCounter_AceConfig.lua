@@ -16,6 +16,7 @@ local defaults = {
         showDashboard = true,
         dashboardLocked = false,
         dashboardOpacity = 0.7,
+        dashboardPosition = {},
         kills = {},
         enemyNames = {},
     }
