@@ -25,6 +25,32 @@ function KillCounter:OnInitialize()
     end
 end
 
+function KillCounter:InitializeTooltip()
+    GameTooltip:SetScript("OnTooltipSetUnit", function(tooltipSelf)
+        local unit = "mouseover"
+        local guid = UnitGUID(unit)
+        if not guid then return end
+
+        local npcID = KillCounter:GetNPCID(guid)
+        if not npcID then return end
+
+        local totalKills = KillCounter.db.profile.kills[npcID] or 0
+        local sessionKills = KillCounter.db.sessionKills[npcID] or 0
+
+        if (KillCounter.db.profile.showTotalKills and totalKills > 0) or (KillCounter.db.profile.showSessionKills and sessionKills > 0) then
+            tooltipSelf:AddLine(" ") -- Add a blank line for spacing
+        end
+
+        if KillCounter.db.profile.showTotalKills and totalKills > 0 then
+            tooltipSelf:AddDoubleLine("Kills (Total):", totalKills, 1, 1, 1, 1, 1, 0)
+        end
+
+        if KillCounter.db.profile.showSessionKills and sessionKills > 0 then
+            tooltipSelf:AddDoubleLine("Kills (Session):", sessionKills, 1, 1, 1, 1, 1, 0)
+        end
+    end)
+end
+
 function KillCounter:AddKill(npcID, enemyName)
     if not npcID then return end
 
@@ -47,6 +73,7 @@ end
 function KillCounter:ResetSessionKills()
     self.db.sessionKills = {}
     print("|cFF00FF00KillCounter:|r Session kill data reset.")
+    self:UpdateDashboard()
 end
 
 function KillCounter:ResetAllKills()
@@ -54,6 +81,7 @@ function KillCounter:ResetAllKills()
   self.db.profile.enemyNames = {}
   self.db.sessionKills = {}
   print("|cFF00FF00KillCounter:|r All data reset.")
+  self:UpdateDashboard()
 end
 
 function KillCounter:GetKillTotals()

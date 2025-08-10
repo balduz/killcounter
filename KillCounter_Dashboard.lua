@@ -3,6 +3,40 @@
 
 local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 
+-- Helper function to create a section in the dashboard
+local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLabel, linesTable)
+    local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    if anchor then
+        title:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, yOffset)
+    else
+        title:SetPoint("TOPLEFT", 15, yOffset)
+    end
+    title:SetText(titleText)
+    title:SetTextColor(1, 1, 0.6)
+
+    local countLabel = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    countLabel:SetPoint("TOPRIGHT", parent, "RIGHT", 0, 0)
+    countLabel:SetPoint("TOP", title, "TOP")
+    countLabel:SetJustifyH("RIGHT")
+    
+    local lastAnchor = title
+    for i = 1, 3 do
+        local name = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
+        name:SetTextColor(1, 1, 1)
+
+        local count = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        count:SetPoint("TOPRIGHT", parent, "RIGHT", 0, 0)
+        count:SetPoint("TOP", name, "TOP")
+        count:SetJustifyH("RIGHT")
+
+        linesTable[i] = { name = name, count = count }
+        lastAnchor = name
+    end
+
+    return countLabel, lastAnchor
+end
+
 function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
@@ -44,59 +78,13 @@ function KillCounter:CreateDashboard()
     killsFrame:SetSize(200, 140)
     killsFrame:SetPoint("TOPLEFT", 0, -35)
 
-    -- Total Kills Section
-    self.totalKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.totalKillsTitle:SetPoint("TOPLEFT", 15, 0)
-    self.totalKillsTitle:SetText("Total")
-    self.totalKillsTitle:SetTextColor(1, 1, 0.6)
-
-    self.totalKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.totalKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
-    self.totalKillsCount:SetPoint("TOP", self.totalKillsTitle, "TOP")
-    self.totalKillsCount:SetJustifyH("RIGHT")
-
+    -- Create Total and Session Kills sections
     self.totalKillsLines = {}
-    local lastAnchor = self.totalKillsTitle
-    for i = 1, 3 do
-        local name = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
-        name:SetTextColor(1, 1, 1)
-
-        local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
-        count:SetPoint("TOP", name, "TOP")
-        count:SetJustifyH("RIGHT")
-
-        self.totalKillsLines[i] = { name = name, count = count }
-        lastAnchor = name
-    end
-
-    -- Session Kills Section
-    self.sessionKillsTitle = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.sessionKillsTitle:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -15)
-    self.sessionKillsTitle:SetText("Session")
-    self.sessionKillsTitle:SetTextColor(1, 1, 0.6)
-
-    self.sessionKillsCount = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    self.sessionKillsCount:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
-    self.sessionKillsCount:SetPoint("TOP", self.sessionKillsTitle, "TOP")
-    self.sessionKillsCount:SetJustifyH("RIGHT")
+    local lastAnchor
+    self.totalKillsCount, lastAnchor = CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
 
     self.sessionKillsLines = {}
-    lastAnchor = self.sessionKillsTitle
-    for i = 1, 3 do
-        local name = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
-        name:SetTextColor(1, 1, 1)
-
-        local count = killsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        count:SetPoint("TOPRIGHT", killsFrame, "RIGHT", 0, 0)
-        count:SetPoint("TOP", name, "TOP")
-        count:SetJustifyH("RIGHT")
-
-        self.sessionKillsLines[i] = { name = name, count = count }
-        lastAnchor = name
-    end
+    self.sessionKillsCount, _ = CreateKillSection(killsFrame, lastAnchor, "Session", -15, self.sessionKillsCount, self.sessionKillsLines)
 
     self:SetDashboardLocked(self.db.profile.dashboardLocked)
     self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
