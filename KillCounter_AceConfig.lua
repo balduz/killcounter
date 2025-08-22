@@ -23,6 +23,7 @@ function KillCounter:OnAce3Initialize()
             enableKillCounter = true,
             showTotalKills = true,
             showSessionKills = true,
+            showKphInTooltip = true, -- ADDED: New default for KPH
             showDashboard = true,
             dashboardLocked = false,
             dashboardResizeLocked = false,
@@ -72,6 +73,15 @@ function KillCounter:OnAce3Initialize()
                         get = function(info) return self.db.profile.showSessionKills end,
                         set = function(info, value) self.db.profile.showSessionKills = value end,
                         order = 3,
+                    },
+                    -- ADDED: New toggle for KPH in the options panel
+                    showKphInTooltip = {
+                        type = "toggle",
+                        name = "Show Kills/Hr in Tooltip",
+                        desc = "Displays the kills per hour for a mob in the current session.",
+                        get = function(info) return self.db.profile.showKphInTooltip end,
+                        set = function(info, value) self.db.profile.showKphInTooltip = value end,
+                        order = 4,
                     },
                 },
             },
