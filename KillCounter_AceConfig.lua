@@ -4,11 +4,6 @@
 local AceAddon = LibStub("AceAddon-3.0")
 local KillCounter = AceAddon:GetAddon("KillCounter")
 
--- Localize Ace3 Libs
-local AceDB = LibStub("AceDB-3.0")
-local AceConfig = LibStub("AceConfig-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-
 -- Localize WoW API functions
 local StaticPopup_Show = StaticPopup_Show
 local StaticPopupDialogs = StaticPopupDialogs
@@ -17,6 +12,11 @@ local print = print
 local string = string
 
 function KillCounter:OnAce3Initialize()
+    -- Store library references on the addon object itself to avoid scope issues.
+    self.AceDB = LibStub("AceDB-3.0")
+    self.AceConfig = LibStub("AceConfig-3.0")
+    self.AceConfigDialog = LibStub("AceConfigDialog-3.0")
+
     -- Default settings for the addon.
     local defaults = {
         profile = {
@@ -37,14 +37,13 @@ function KillCounter:OnAce3Initialize()
     }
 
     -- Initialize the database with the defaults.
-    self.db = AceDB:New("KillCounterEnhancedDB", defaults, true)
+    self.db = self.AceDB:New("KillCounterEnhancedDB", defaults, true)
 
-    -- Define a single, unified options table for both the GUI and slash commands.
-    self.options = {
+    -- Define the options table for the GUI settings panel.
+    local options = {
         type = "group",
         name = "Kill Counter",
         args = {
-            -- GUI Options (visible in the panel because they have an 'order')
             general = {
                 type = "group",
                 name = "General Settings",
@@ -140,7 +139,7 @@ function KillCounter:OnAce3Initialize()
                     },
                 },
             },
-            reset = {
+            data_management = {
                 type = "group",
                 name = "Data Management",
                 order = 3,
@@ -161,67 +160,54 @@ function KillCounter:OnAce3Initialize()
                     },
                 },
             },
-
-            -- Slash Command Handlers (hidden from the GUI because they lack an 'order')
-            slash_reset = {
-                type = "group",
-                name = "reset",
-                desc = "Reset kill data",
-                hidden = true, -- This keeps it out of the GUI panel
-                args = {
-                    session = {
-                        type = "execute",
-                        name = "session",
-                        desc = "Reset session kill data",
-                        func = function() self:ResetSessionKills() end,
-                    },
-                    all = {
-                        type = "execute",
-                        name = "all",
-                        desc = "Reset all kill data",
-                        func = function() StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                    },
-                }
-            },
-            slash_show = {
-                type = "input",
-                name = "show",
-                desc = "Show kills for a specific enemy ID",
-                hidden = true, -- This keeps it out of the GUI panel
-                set = function(info, input)
-                    local enemyID = tonumber(input)
-                    if enemyID then
-                        local enemyName = self.db.profile.enemyNames[enemyID] or "Unknown"
-                        local totalKills = self.db.profile.kills[enemyID] or 0
-                        local sessionKills = self.db.sessionKills[enemyID] or 0
-                        print(string.format("|cFF00FF00KillCounter:|r %s (ID: %d) - Total: %d, Session: %d", enemyName, enemyID, totalKills, sessionKills))
-                    else
-                        print("|cFFFF0000KillCounter:|r Invalid enemy ID. Please provide a number.")
-                    end
-                end,
-            },
-        },
+        }
     }
 
-    -- Register the single, unified options table.
-    AceConfig:RegisterOptionsTable("KillCounter", self.options)
+    -- Register the options table.
+    self.AceConfig:RegisterOptionsTable("KillCounter", options)
     -- Add the GUI part to the Blizzard Interface Options panel.
-    AceConfigDialog:AddToBlizOptions("KillCounter", "Kill Counter")
+    self.AceConfigDialog:AddToBlizOptions("KillCounter", "Kill Counter")
 
     -- Register the chat commands with AceConsole.
     self:RegisterChatCommand("kc", "ChatCommand")
     self:RegisterChatCommand("killcounter", "ChatCommand")
 end
 
--- This is the simplified handler function that AceConsole will call.
+-- This is the handler function that AceConsole will call.
+-- It now manually parses the input string.
 function KillCounter:ChatCommand(input)
-    -- If the user just types /kc, open the options panel.
-    if not input or input:trim() == "" then
-        LibStub("AceConfigDialog-3.0"):Open("KillCounter")
-        return
+    input = input and input:trim():lower() or ""
+
+    if input == "" then
+        self.AceConfigDialog:Open("KillCounter")
+    elseif input == "help" then
+        print("|cFF00FF00Kill Counter Commands:|r")
+        print("/kc - Opens the configuration panel")
+        print("/kc help - Show this help")
+        print("/kc reset all - Reset all kill data")
+        print("/kc reset session - Reset session kill data")
+        print("/kc show [enemyID] - Show kills for specific enemy")
+    elseif input == "reset session" then
+        self:ResetSessionKills()
+    elseif input == "reset all" then
+        StaticPopup_Show("KILL_COUNTER_RESET_ALL")
+    else
+        -- Handle commands with arguments, like "show 12345"
+        local command, arg = input:match("^(%S+)%s+(.*)$")
+        if command == "show" and arg then
+            local enemyID = tonumber(arg)
+            if enemyID then
+                local enemyName = self.db.profile.enemyNames[enemyID] or "Unknown"
+                local totalKills = self.db.profile.kills[enemyID] or 0
+                local sessionKills = self.db.sessionKills[enemyID] or 0
+                print(string.format("|cFF00FF00KillCounter:|r %s (ID: %d) - Total: %d, Session: %d", enemyName, enemyID, totalKills, sessionKills))
+            else
+                print("|cFFFF0000KillCounter:|r Invalid enemy ID. Please provide a number.")
+            end
+        else
+            print("|cFFFF0000KillCounter:|r Unknown command. Type '/kc help' for a list of commands.")
+        end
     end
-    -- Otherwise, let AceConfig process the input (e.g., "reset session").
-    LibStub("AceConfig-3.0"):HandleOptions(self.options, input)
 end
 
 
