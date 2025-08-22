@@ -9,5 +9,4 @@
 KillCounter_Core.lua
 KillCounter_AceConfig.lua
 KillCounter_Events.lua
-KillCounter_Slash.lua
 KillCounter_Dashboard.lua

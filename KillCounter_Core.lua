@@ -2,13 +2,17 @@
 -- Core addon functionality and initialization
 
 local AceAddon = LibStub("AceAddon-3.0")
-KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0") -- Assuming you use AceEvent
+KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0", "AceConsole-3.0")
 
 -- Helper function to extract NPC ID from GUID
 function KillCounter:GetNPCID(guid)
     if not guid then return nil end
-    local _, _, _, _, _, _, id = string.find(guid, "Creature%-(%d+)%-(%d+)%-(%d+)%-(%d+)%-(%d+)%-(%d+)")
-    return tonumber(id)
+
+    local objectType, _, _, _, _, npcID = strsplit("-", guid)
+    if objectType == "Creature" and npcID then
+        return tonumber(npcID)
+    end
+    return nil
 end
 
 -- Initialize the addon
