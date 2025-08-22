@@ -58,15 +58,18 @@ function KillCounter:InitializeTooltip()
         end
 
         -- KPH Display Logic
-        if KillCounter.db.profile.showKphInTooltip and sessionKills > 1 then
-            local kphData = KillCounter.sessionKphData[npcID]
-            if kphData then
-                local elapsedTime = GetTime() - kphData.startTime
-                if elapsedTime > 0 then
-                    local kph = math.floor((sessionKills / elapsedTime) * 3600)
-                    tooltipSelf:AddDoubleLine("Kills/Hr (Session):", kph, 1, 1, 1, 1, 1, 0)
+        if KillCounter.db.profile.showKphInTooltip and sessionKills > 0 then
+            local kphValue = "N/A" -- Default to N/A
+            if sessionKills > 1 then
+                local kphData = KillCounter.sessionKphData[npcID]
+                if kphData then
+                    local elapsedTime = GetTime() - kphData.startTime
+                    if elapsedTime > 0 then
+                        kphValue = math.floor((sessionKills / elapsedTime) * 3600)
+                    end
                 end
             end
+            tooltipSelf:AddDoubleLine("Kills/Hr (Session):", kphValue, 1, 1, 1, 1, 1, 0)
         end
     end)
 end
@@ -89,11 +92,11 @@ function KillCounter:AddKill(npcID, enemyName)
         -- First kill for this mob this session, start the timer.
         self.sessionKphData[npcID] = { startTime = currentTime, lastKillTime = currentTime }
     else
-        -- Check for inactivity. If it's been too long, reset the start time.
+        -- Check for inactivity. If it's been too long, reset the start time to "pause" the timer.
         if (currentTime - kphData.lastKillTime) > KPH_INACTIVITY_THRESHOLD then
-            -- The number of kills to subtract from the time calculation to "pause" the timer
-            local killsDuringOldPeriod = self.db.sessionKills[npcID] - 1
-            kphData.startTime = currentTime - ((killsDuringOldPeriod / (kphData.lastKillTime - kphData.startTime)) * 3600)
+            -- We effectively remove the inactive time by moving the start time forward.
+            local inactiveTime = currentTime - kphData.lastKillTime
+            kphData.startTime = kphData.startTime + inactiveTime
         end
         kphData.lastKillTime = currentTime
     end
