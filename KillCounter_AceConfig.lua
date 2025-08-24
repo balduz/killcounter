@@ -35,6 +35,7 @@ function KillCounter:OnAce3Initialize()
             dashboardPosition = {},
             kills = {},
             enemyNames = {},
+            firstRun = false,
         }
     }
 

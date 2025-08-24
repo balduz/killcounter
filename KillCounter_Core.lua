@@ -36,6 +36,11 @@ function KillCounter:OnInitialize()
         self.dashboardFrame:Show()
         self:UpdateDashboard()
     end
+
+    if not self.db.profile.firstRun then
+        self:PrintWelcomeMessage()
+        self.db.profile.firstRun = true
+    end
 end
 
 function KillCounter:InitializeTooltip()
@@ -185,4 +190,9 @@ function KillCounter:OnCombatEvent()
             end
         end
     end
+end
+
+function KillCounter:PrintWelcomeMessage()
+    self:Print("Thank you for installing Kill Counter!")
+    self:Print("You can configure the addon in the Interface Options panel or by typing |cFFFFFF00/kc|r.")
 end
