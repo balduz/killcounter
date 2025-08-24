@@ -174,8 +174,6 @@ end
 
 
 local function UpdateKillSection(linesTable, countLabel, topKills, totalCount, enemyNames)
-    countLabel:SetText(string.format("|cFF87CEEB%d|r", totalCount))
-
     for i = 1, 3 do
         local line = linesTable[i]
         if topKills[i] then
@@ -199,8 +197,31 @@ function KillCounter:UpdateDashboard()
     local topTotalKills = self:GetTopKills(self.db.profile.kills, 3)
     local topSessionKills = self:GetTopKills(self.db.sessionKills, 3)
 
-    UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills, self.db.profile.enemyNames)
-    UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills, self.db.profile.enemyNames)
+    self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
+    if #topTotalKills > 0 then
+        UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills, self.db.profile.enemyNames)
+    else
+        SetPlaceholderText(self.totalKillsLines, "|cFFa0a0a0No kills yet!|r")
+    end
+
+    self.sessionKillsCount:SetText(string.format("|cFF87CEEB%d|r", sessionKills))
+    if #topSessionKills > 0 then
+        UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills, self.db.profile.enemyNames)
+    else
+        SetPlaceholderText(self.sessionKillsLines, "|cFFa0a0a0No kills this session.|r")
+    end
+end
+
+function SetPlaceholderText(linesTable, message)
+    -- Display the message on the first line
+    linesTable[1].name:SetText(message)
+    linesTable[1].count:SetText("")
+
+    -- Clear the other lines
+    for i = 2, 3 do
+        linesTable[i].name:SetText("")
+        linesTable[i].count:SetText("")
+    end
 end
 
 function KillCounter:ToggleDashboard(show)
