@@ -23,7 +23,8 @@ function KillCounter:OnAce3Initialize()
             enableKillCounter = true,
             showTotalKills = true,
             showSessionKills = true,
-            showKphInTooltip = true, -- ADDED: New default for KPH
+            showKphInTooltip = true,
+            kphThreshold = DEFAULT_KPH_THRESHOLD_MINUTES,
             showDashboard = true,
             dashboardLocked = false,
             dashboardResizeLocked = false,
@@ -74,7 +75,6 @@ function KillCounter:OnAce3Initialize()
                         set = function(info, value) self.db.profile.showSessionKills = value end,
                         order = 3,
                     },
-                    -- ADDED: New toggle for KPH in the options panel
                     showKphInTooltip = {
                         type = "toggle",
                         name = "Show Kills/Hr in Tooltip",
@@ -82,6 +82,15 @@ function KillCounter:OnAce3Initialize()
                         get = function(info) return self.db.profile.showKphInTooltip end,
                         set = function(info, value) self.db.profile.showKphInTooltip = value end,
                         order = 4,
+                    },
+                    kphThreshold = {
+                        type = "range",
+                        name = "KPH Inactivity Timer (Minutes)",
+                        desc = "If you don't record a kill for this many minutes, the KPH timer will pause.",
+                        min = 1, max = 30, step = 1,
+                        get = function(info) return self.db.profile.kphThreshold or 15 end,
+                        set = function(info, value) self.db.profile.kphThreshold = value end,
+                        order = 5,
                     },
                 },
             },

@@ -4,8 +4,7 @@
 local AceAddon = LibStub("AceAddon-3.0")
 KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0", "AceConsole-3.0")
 
--- A constant for the inactivity timer (in seconds). 15 minutes by default.
-local KPH_INACTIVITY_THRESHOLD = 900
+local DEFAULT_KPH_THRESHOLD_MINUTES = 15
 
 -- Helper function to extract NPC ID from GUID
 function KillCounter:GetNPCID(guid)
@@ -74,7 +73,7 @@ function KillCounter:InitializeTooltip()
                     if kphData then
                         local elapsedTime = GetTime() - kphData.startTime
                         if elapsedTime > 0 then
-                            kphValue = math.floor((sessionKills / elapsedTime) * 3600)
+                        kphValue = math.floor(((sessionKills - 1) / elapsedTime) * 3600)
                         end
                     end
                 end
@@ -98,11 +97,13 @@ function KillCounter:AddKill(npcID, enemyName)
     local currentTime = GetTime()
     local kphData = self.sessionKphData[npcID]
 
+    local inactivityThreshold = (self.db.profile.kphThreshold or DEFAULT_KPH_THRESHOLD_MINUTES) * 60
+
     if not kphData then
         self.sessionKphData[npcID] = { startTime = currentTime, lastKillTime = currentTime }
     else
         -- Check for inactivity. If it's been too long, reset the start time to "pause" the timer.
-        if (currentTime - kphData.lastKillTime) > KPH_INACTIVITY_THRESHOLD then
+        if (currentTime - kphData.lastKillTime) > inactivityThreshold then
             -- We effectively remove the inactive time by moving the start time forward.
             local inactiveTime = currentTime - kphData.lastKillTime
             kphData.startTime = kphData.startTime + inactiveTime
