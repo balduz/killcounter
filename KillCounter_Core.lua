@@ -23,8 +23,14 @@ function KillCounter:OnInitialize()
     self:OnAce3Initialize()
     self.db.sessionKills = {}
     self.sessionKphData = {}
+    
+    self.eventFrame = CreateFrame("Frame")
+    self.eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    self.eventFrame:SetScript("OnEvent", function(frame, event, ...)
+      self:OnCombatEvent()
+    end)
+    
     self:InitializeTooltip()
-    self:RegisterEvents()
     self:CreateDashboard()
 
     if self.db.profile.showDashboard then
@@ -159,4 +165,28 @@ function KillCounter:GetTopKills(killsTable, count)
     end
 
     return topKills
+end
+
+function KillCounter:OnCombatEvent()
+    local args = {CombatLogGetCurrentEventInfo()}
+    local timestamp, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool, auraType, amount = unpack(args)
+    
+    if event ~= "UNIT_DIED" and event ~= "PARTY_KILL" then
+        return
+    end
+    
+    local playerGUID = UnitGUID("player")
+    
+    if destGUID and destName and destName ~= "" then
+        -- Count if player was the killer OR if it's a party kill and player is in a party
+        if sourceGUID == playerGUID or (event == "PARTY_KILL" and (IsInGroup() or IsInRaid())) then
+            local enemyID = self:GetNPCID(destGUID)
+            if not enemyID then 
+                return nil 
+            end
+            KillCounter:AddKill(enemyID, destName)
+
+            self:UpdateDashboard()
+        end
+    end
 end
