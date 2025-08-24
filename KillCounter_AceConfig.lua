@@ -165,8 +165,8 @@ function KillCounter:OnAce3Initialize()
                 args = {
                     resetSession = {
                         type = "execute",
-                        name = "Reset Session Kills",
-                        desc = "Clears all the kill counters for the current session.",
+                        name = "Reset Session Data",
+                        desc = "Clears all kill counters and Kills Per Hour (KPH) data for the current session.",
                         func = function() self:ResetSessionKills() end,
                         order = 1,
                     },
