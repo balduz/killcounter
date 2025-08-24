@@ -20,9 +20,9 @@ end
 
 -- Initialize the addon
 function KillCounter:OnInitialize()
-    self:OnAce3Initialize() -- Call the Ace3 initialization from KillCounter_AceConfig.lua
-    self.db.sessionKills = {} -- Initialize session kills
-    self.sessionKphData = {} -- Initialize KPH tracking data
+    self:OnAce3Initialize()
+    self.db.sessionKills = {}
+    self.sessionKphData = {}
     self:InitializeTooltip()
     self:RegisterEvents()
     self:CreateDashboard()
@@ -45,31 +45,35 @@ function KillCounter:InitializeTooltip()
         local totalKills = KillCounter.db.profile.kills[npcID] or 0
         local sessionKills = KillCounter.db.sessionKills[npcID] or 0
 
-        if (KillCounter.db.profile.showTotalKills and totalKills > 0) or (KillCounter.db.profile.showSessionKills and sessionKills > 0) then
+        local showTotal = KillCounter.db.profile.showTotalKills and totalKills > 0
+        local showSession = KillCounter.db.profile.showSessionKills and sessionKills > 0
+        local showKph = KillCounter.db.profile.showKphInTooltip and sessionKills > 0
+
+        if showTotal or showSession or showKph then
             tooltipSelf:AddLine(" ") -- Add a blank line for spacing
-        end
+            tooltipSelf:AddLine("|cFF00FF00Kill Counter|r")
 
-        if KillCounter.db.profile.showTotalKills and totalKills > 0 then
-            tooltipSelf:AddDoubleLine("Kills (Total):", totalKills, 1, 1, 1, 1, 1, 0)
-        end
+            if showTotal then
+                tooltipSelf:AddDoubleLine("  Total:", totalKills, 1, 1, 1, 1, 1, 0)
+            end
 
-        if KillCounter.db.profile.showSessionKills and sessionKills > 0 then
-            tooltipSelf:AddDoubleLine("Kills (Session):", sessionKills, 1, 1, 1, 1, 1, 0)
-        end
+            if showSession then
+                tooltipSelf:AddDoubleLine("  Session:", sessionKills, 1, 1, 1, 1, 1, 0)
+            end
 
-        -- KPH Display Logic
-        if KillCounter.db.profile.showKphInTooltip and sessionKills > 0 then
-            local kphValue = "N/A" -- Default to N/A
-            if sessionKills > 1 then
-                local kphData = KillCounter.sessionKphData[npcID]
-                if kphData then
-                    local elapsedTime = GetTime() - kphData.startTime
-                    if elapsedTime > 0 then
-                        kphValue = math.floor((sessionKills / elapsedTime) * 3600)
+            if showKph then
+                local kphValue = "N/A"
+                if sessionKills > 1 then
+                    local kphData = KillCounter.sessionKphData[npcID]
+                    if kphData then
+                        local elapsedTime = GetTime() - kphData.startTime
+                        if elapsedTime > 0 then
+                            kphValue = math.floor((sessionKills / elapsedTime) * 3600)
+                        end
                     end
                 end
+                tooltipSelf:AddDoubleLine("  Kills/Hr:", kphValue, 1, 1, 1, 1, 1, 0)
             end
-            tooltipSelf:AddDoubleLine("Kills/Hr (Session):", kphValue, 1, 1, 1, 1, 1, 0)
         end
     end)
 end
@@ -89,7 +93,6 @@ function KillCounter:AddKill(npcID, enemyName)
     local kphData = self.sessionKphData[npcID]
 
     if not kphData then
-        -- First kill for this mob this session, start the timer.
         self.sessionKphData[npcID] = { startTime = currentTime, lastKillTime = currentTime }
     else
         -- Check for inactivity. If it's been too long, reset the start time to "pause" the timer.
@@ -112,7 +115,7 @@ end
 
 function KillCounter:ResetSessionKills()
     self.db.sessionKills = {}
-    self.sessionKphData = {} -- Also reset the KPH data
+    self.sessionKphData = {}
     print("|cFF00FF00KillCounter:|r Session kill data reset.")
     self:UpdateDashboard()
 end
@@ -121,7 +124,7 @@ function KillCounter:ResetAllKills()
   self.db.profile.kills = {}
   self.db.profile.enemyNames = {}
   self.db.sessionKills = {}
-  self.sessionKphData = {} -- Also reset the KPH data
+  self.sessionKphData = {}
   print("|cFF00FF00KillCounter:|r All data reset.")
   self:UpdateDashboard()
 end
