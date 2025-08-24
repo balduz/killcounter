@@ -1,6 +1,5 @@
 -- KillCounter_Dashboard.lua
 -- Creates and manages the kill counter dashboard
-
 local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 
 -- Helper function to create a section in the dashboard
@@ -18,7 +17,7 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
     countLabel:SetPoint("TOPRIGHT", parent, "RIGHT", -15, 0)
     countLabel:SetPoint("TOP", title, "TOP")
     countLabel:SetJustifyH("RIGHT")
-    
+
     local lastAnchor = title
     for i = 1, 3 do
         local name = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -30,7 +29,10 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
         count:SetPoint("TOP", name, "TOP")
         count:SetJustifyH("RIGHT")
 
-        linesTable[i] = { name = name, count = count }
+        linesTable[i] = {
+            name = name,
+            count = count
+        }
         lastAnchor = name
     end
 
@@ -41,7 +43,7 @@ function KillCounter:CreateDashboard()
     -- Main frame
     self.dashboardFrame = CreateFrame("Frame", "KillCounterDashboard", UIParent, "BackdropTemplate")
     self.dashboardFrame:SetSize(self.db.profile.dashboardWidth, self.db.profile.dashboardHeight)
-    
+
     -- Load position or set default
     local pos = self.db.profile.dashboardPosition
     if pos and pos.point then
@@ -63,8 +65,15 @@ function KillCounter:CreateDashboard()
     self.dashboardFrame:SetBackdrop({
         bgFile = "Interface/DialogFrame/UI-DialogBox-Background",
         edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
-        tile = true, tileSize = 32, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        tile = true,
+        tileSize = 32,
+        edgeSize = 16,
+        insets = {
+            left = 4,
+            right = 4,
+            top = 4,
+            bottom = 4
+        }
     })
     self.dashboardFrame:Hide()
 
@@ -79,14 +88,15 @@ function KillCounter:CreateDashboard()
     killsFrame:SetPoint("TOPLEFT", 0, -35)
     killsFrame:SetPoint("BOTTOMRIGHT", self.dashboardFrame, "BOTTOMRIGHT", 0, 0)
 
-
     -- Create Total and Session Kills sections
     self.totalKillsLines = {}
     local lastAnchor
-    self.totalKillsCount, lastAnchor, self.totalKillsTitle = CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
+    self.totalKillsCount, lastAnchor, self.totalKillsTitle =
+        CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
 
     self.sessionKillsLines = {}
-    self.sessionKillsCount, _, self.sessionKillsTitle = CreateKillSection(killsFrame, lastAnchor, "Session", -15, self.sessionKillsCount, self.sessionKillsLines)
+    self.sessionKillsCount, _, self.sessionKillsTitle = CreateKillSection(killsFrame, lastAnchor, "Session", -15,
+        self.sessionKillsCount, self.sessionKillsLines)
 
     -- Resize Handle
     self.resizeHandle = CreateFrame("Frame", nil, self.dashboardFrame)
@@ -114,6 +124,8 @@ function KillCounter:CreateDashboard()
     self:SetDashboardResizeLocked(self.db.profile.dashboardResizeLocked)
     self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
     self:SetDashboardFontSize(self.db.profile.dashboardFontSize)
+
+    self:UpdateDashboardLayout()
 end
 
 function KillCounter:SaveDashboardPosition()
@@ -122,7 +134,7 @@ function KillCounter:SaveDashboardPosition()
         point = point,
         relativePoint = relativePoint,
         xOfs = xOfs,
-        yOfs = yOfs,
+        yOfs = yOfs
     }
 end
 
@@ -157,10 +169,10 @@ end
 function KillCounter:SetDashboardFontSize(size)
     local fontName, _, fontFlags = self.dashboardTitle:GetFont()
     self.dashboardTitle:SetFont(fontName, size + 2, fontFlags)
-    
+
     self.totalKillsTitle:SetFont(fontName, size, fontFlags)
     self.totalKillsCount:SetFont(fontName, size, fontFlags)
-    
+
     self.sessionKillsTitle:SetFont(fontName, size, fontFlags)
     self.sessionKillsCount:SetFont(fontName, size, fontFlags)
 
@@ -171,7 +183,6 @@ function KillCounter:SetDashboardFontSize(size)
         self.sessionKillsLines[i].count:SetFont(fontName, size - 2, fontFlags)
     end
 end
-
 
 local function UpdateKillSection(linesTable, countLabel, topKills, totalCount, enemyNames)
     for i = 1, 3 do
@@ -199,14 +210,16 @@ function KillCounter:UpdateDashboard()
 
     self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
     if #topTotalKills > 0 then
-        UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills, self.db.profile.enemyNames)
+        UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills,
+            self.db.profile.enemyNames)
     else
         SetPlaceholderText(self.totalKillsLines, "|cFFa0a0a0No kills yet!|r")
     end
 
     self.sessionKillsCount:SetText(string.format("|cFF87CEEB%d|r", sessionKills))
     if #topSessionKills > 0 then
-        UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills, self.db.profile.enemyNames)
+        UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills,
+            self.db.profile.enemyNames)
     else
         SetPlaceholderText(self.sessionKillsLines, "|cFFa0a0a0No kills this session.|r")
     end
@@ -234,5 +247,58 @@ function KillCounter:ToggleDashboard(show)
         self:UpdateDashboard()
     else
         self.dashboardFrame:Hide()
+    end
+end
+
+function KillCounter:UpdateDashboardLayout()
+    if not self.dashboardFrame then
+        return
+    end
+
+    local showTotal = self.db.profile.showTotalOnDashboard
+    local showSession = self.db.profile.showSessionOnDashboard
+
+    -- Toggle visibility of the 'Total' section and all its lines
+    if showTotal then
+        self.totalKillsTitle:Show()
+        self.totalKillsCount:Show()
+        for i = 1, 3 do
+            self.totalKillsLines[i].name:Show()
+            self.totalKillsLines[i].count:Show()
+        end
+    else
+        self.totalKillsTitle:Hide()
+        self.totalKillsCount:Hide()
+        for i = 1, 3 do
+            self.totalKillsLines[i].name:Hide()
+            self.totalKillsLines[i].count:Hide()
+        end
+    end
+
+    -- Toggle visibility of the 'Session' section and all its lines
+    if showSession then
+        self.sessionKillsTitle:Show()
+        self.sessionKillsCount:Show()
+        for i = 1, 3 do
+            self.sessionKillsLines[i].name:Show()
+            self.sessionKillsLines[i].count:Show()
+        end
+    else
+        self.sessionKillsTitle:Hide()
+        self.sessionKillsCount:Hide()
+        for i = 1, 3 do
+            self.sessionKillsLines[i].name:Hide()
+            self.sessionKillsLines[i].count:Hide()
+        end
+    end
+
+    -- Re-anchor the 'Session' title based on whether 'Total' is visible
+    self.sessionKillsTitle:ClearAllPoints()
+    if showTotal then
+        -- Anchor it below the last line of the total kills section
+        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[3].name, "BOTTOMLEFT", 0, -15)
+    else
+        -- Anchor it directly to the parent frame's top
+        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsTitle:GetParent(), "TOPLEFT", 15, 0)
     end
 end

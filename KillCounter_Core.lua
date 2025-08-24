@@ -1,6 +1,5 @@
 -- KillCounter_Core.lua
 -- Core addon functionality and initialization
-
 local AceAddon = LibStub("AceAddon-3.0")
 KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0", "AceConsole-3.0")
 
@@ -8,7 +7,9 @@ local DEFAULT_KPH_THRESHOLD_MINUTES = 15
 
 -- Helper function to extract NPC ID from GUID
 function KillCounter:GetNPCID(guid)
-    if not guid then return nil end
+    if not guid then
+        return nil
+    end
 
     local objectType, _, _, _, _, npcID = strsplit("-", guid)
     if objectType == "Creature" and npcID then
@@ -22,13 +23,13 @@ function KillCounter:OnInitialize()
     self:OnAce3Initialize()
     self.db.sessionKills = {}
     self.sessionKphData = {}
-    
+
     self.eventFrame = CreateFrame("Frame")
     self.eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self.eventFrame:SetScript("OnEvent", function(frame, event, ...)
-      self:OnCombatEvent()
+        self:OnCombatEvent()
     end)
-    
+
     self:InitializeTooltip()
     self:CreateDashboard()
 
@@ -47,10 +48,14 @@ function KillCounter:InitializeTooltip()
     GameTooltip:SetScript("OnTooltipSetUnit", function(tooltipSelf)
         local unit = "mouseover"
         local guid = UnitGUID(unit)
-        if not guid then return end
+        if not guid then
+            return
+        end
 
         local npcID = KillCounter:GetNPCID(guid)
-        if not npcID then return end
+        if not npcID then
+            return
+        end
 
         local totalKills = KillCounter.db.profile.kills[npcID] or 0
         local sessionKills = KillCounter.db.sessionKills[npcID] or 0
@@ -78,7 +83,7 @@ function KillCounter:InitializeTooltip()
                     if kphData then
                         local elapsedTime = GetTime() - kphData.startTime
                         if elapsedTime > 0 then
-                        kphValue = math.floor(((sessionKills - 1) / elapsedTime) * 3600)
+                            kphValue = math.floor(((sessionKills - 1) / elapsedTime) * 3600)
                         end
                     end
                 end
@@ -89,7 +94,9 @@ function KillCounter:InitializeTooltip()
 end
 
 function KillCounter:AddKill(npcID, enemyName)
-    if not npcID then return end
+    if not npcID then
+        return
+    end
 
     -- Total kills
     self.db.profile.kills[npcID] = (self.db.profile.kills[npcID] or 0) + 1
@@ -105,7 +112,10 @@ function KillCounter:AddKill(npcID, enemyName)
     local inactivityThreshold = (self.db.profile.kphThreshold or DEFAULT_KPH_THRESHOLD_MINUTES) * 60
 
     if not kphData then
-        self.sessionKphData[npcID] = { startTime = currentTime, lastKillTime = currentTime }
+        self.sessionKphData[npcID] = {
+            startTime = currentTime,
+            lastKillTime = currentTime
+        }
     else
         -- Check for inactivity. If it's been too long, reset the start time to "pause" the timer.
         if (currentTime - kphData.lastKillTime) > inactivityThreshold then
@@ -133,12 +143,12 @@ function KillCounter:ResetSessionKills()
 end
 
 function KillCounter:ResetAllKills()
-  self.db.profile.kills = {}
-  self.db.profile.enemyNames = {}
-  self.db.sessionKills = {}
-  self.sessionKphData = {}
-  print("|cFF00FF00KillCounter:|r All data reset.")
-  self:UpdateDashboard()
+    self.db.profile.kills = {}
+    self.db.profile.enemyNames = {}
+    self.db.sessionKills = {}
+    self.sessionKphData = {}
+    print("|cFF00FF00KillCounter:|r All data reset.")
+    self:UpdateDashboard()
 end
 
 function KillCounter:GetKillTotals()
@@ -174,16 +184,19 @@ function KillCounter:GetTopKills(killsTable, count)
 end
 
 function KillCounter:OnCombatEvent()
-    local timestamp, eventType, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
-    
+    local timestamp, eventType, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName,
+        destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
+
     if eventType ~= "UNIT_DIED" and eventType ~= "PARTY_KILL" then
         return
     end
 
-    local isPlayerKill = bit.band(sourceFlags, COMBATLOG_OBJECT_CONTROL_PLAYER) > 0 and bit.band(sourceFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0
-    if (isPlayerKill or (eventType == "PARTY_KILL" and (IsInGroup() or IsInRaid()))) and destGUID and destName and destName ~= "" then
+    local isPlayerKill = bit.band(sourceFlags, COMBATLOG_OBJECT_CONTROL_PLAYER) > 0 and
+                             bit.band(sourceFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0
+    if (isPlayerKill or (eventType == "PARTY_KILL" and (IsInGroup() or IsInRaid()))) and destGUID and destName and
+        destName ~= "" then
         local enemyID = self:GetNPCID(destGUID)
-        if enemyID then 
+        if enemyID then
             KillCounter:AddKill(enemyID, destName)
             if self.dashboardFrame and self.dashboardFrame:IsShown() then
                 self:UpdateDashboard()

@@ -1,6 +1,5 @@
 -- KillCounter_AceConfig.lua
 -- Defines the addon's options panel and slash commands using AceConfig-3.0
-
 local AceAddon = LibStub("AceAddon-3.0")
 local KillCounter = AceAddon:GetAddon("KillCounter")
 
@@ -35,7 +34,9 @@ function KillCounter:OnAce3Initialize()
             dashboardPosition = {},
             kills = {},
             enemyNames = {},
-            firstRun = false,
+            showTotalOnDashboard = true,
+            showSessionOnDashboard = true,
+            firstRun = false
         }
     }
 
@@ -56,44 +57,66 @@ function KillCounter:OnAce3Initialize()
                         type = "toggle",
                         name = "Enable Kill Counter",
                         desc = "Toggles the Kill Counter on or off.",
-                        get = function(info) return self.db.profile.enableKillCounter end,
-                        set = function(info, value) self.db.profile.enableKillCounter = value end,
-                        order = 1,
+                        get = function(info)
+                            return self.db.profile.enableKillCounter
+                        end,
+                        set = function(info, value)
+                            self.db.profile.enableKillCounter = value
+                        end,
+                        order = 1
                     },
                     showTotalKills = {
                         type = "toggle",
                         name = "Show Total Kills in Tooltip",
                         desc = "Displays the total number of kills for a mob in the tooltip.",
-                        get = function(info) return self.db.profile.showTotalKills end,
-                        set = function(info, value) self.db.profile.showTotalKills = value end,
-                        order = 2,
+                        get = function(info)
+                            return self.db.profile.showTotalKills
+                        end,
+                        set = function(info, value)
+                            self.db.profile.showTotalKills = value
+                        end,
+                        order = 2
                     },
                     showSessionKills = {
                         type = "toggle",
                         name = "Show Session Kills in Tooltip",
                         desc = "Displays the number of kills for a mob in the current session in the tooltip.",
-                        get = function(info) return self.db.profile.showSessionKills end,
-                        set = function(info, value) self.db.profile.showSessionKills = value end,
-                        order = 3,
+                        get = function(info)
+                            return self.db.profile.showSessionKills
+                        end,
+                        set = function(info, value)
+                            self.db.profile.showSessionKills = value
+                        end,
+                        order = 3
                     },
                     showKphInTooltip = {
                         type = "toggle",
                         name = "Show Kills/Hr in Tooltip",
                         desc = "Displays the kills per hour for a mob in the current session.",
-                        get = function(info) return self.db.profile.showKphInTooltip end,
-                        set = function(info, value) self.db.profile.showKphInTooltip = value end,
-                        order = 4,
+                        get = function(info)
+                            return self.db.profile.showKphInTooltip
+                        end,
+                        set = function(info, value)
+                            self.db.profile.showKphInTooltip = value
+                        end,
+                        order = 4
                     },
                     kphThreshold = {
                         type = "range",
                         name = "KPH Inactivity Timer (Minutes)",
                         desc = "If you don't record a kill for this many minutes, the KPH timer will pause.",
-                        min = 1, max = 30, step = 1,
-                        get = function(info) return self.db.profile.kphThreshold or 15 end,
-                        set = function(info, value) self.db.profile.kphThreshold = value end,
-                        order = 5,
-                    },
-                },
+                        min = 1,
+                        max = 30,
+                        step = 1,
+                        get = function(info)
+                            return self.db.profile.kphThreshold or 15
+                        end,
+                        set = function(info, value)
+                            self.db.profile.kphThreshold = value
+                        end,
+                        order = 5
+                    }
+                }
             },
             dashboard = {
                 type = "group",
@@ -104,60 +127,100 @@ function KillCounter:OnAce3Initialize()
                         type = "toggle",
                         name = "Show Dashboard",
                         desc = "Toggles the dashboard visibility.",
-                        get = function(info) return self.db.profile.showDashboard end,
+                        get = function(info)
+                            return self.db.profile.showDashboard
+                        end,
                         set = function(info, value)
                             self.db.profile.showDashboard = value
                             self:ToggleDashboard(value)
                         end,
-                        order = 1,
+                        order = 1
                     },
                     dashboardLocked = {
                         type = "toggle",
                         name = "Lock Dashboard Position",
                         desc = "Toggles whether the dashboard can be moved.",
-                        get = function(info) return self.db.profile.dashboardLocked end,
+                        get = function(info)
+                            return self.db.profile.dashboardLocked
+                        end,
                         set = function(info, value)
                             self.db.profile.dashboardLocked = value
                             self:SetDashboardLocked(value)
                         end,
-                        order = 2,
+                        order = 2
                     },
                     dashboardResizeLocked = {
                         type = "toggle",
                         name = "Lock Dashboard Size",
                         desc = "Toggles whether the dashboard can be resized.",
-                        get = function(info) return self.db.profile.dashboardResizeLocked end,
+                        get = function(info)
+                            return self.db.profile.dashboardResizeLocked
+                        end,
                         set = function(info, value)
                             self.db.profile.dashboardResizeLocked = value
                             self:SetDashboardResizeLocked(value)
                         end,
-                        order = 3,
+                        order = 3
                     },
                     dashboardOpacity = {
                         type = "range",
                         name = "Dashboard Opacity",
                         desc = "Adjusts the background opacity of the dashboard.",
-                        min = 0, max = 1, step = 0.05,
-                        get = function(info) return self.db.profile.dashboardOpacity end,
+                        min = 0,
+                        max = 1,
+                        step = 0.05,
+                        get = function(info)
+                            return self.db.profile.dashboardOpacity
+                        end,
                         set = function(info, value)
                             self.db.profile.dashboardOpacity = value
                             self:SetDashboardOpacity(value)
                         end,
-                        order = 4,
+                        order = 4
                     },
                     dashboardFontSize = {
                         type = "range",
                         name = "Dashboard Font Size",
                         desc = "Adjusts the font size of the dashboard.",
-                        min = 8, max = 20, step = 1,
-                        get = function(info) return self.db.profile.dashboardFontSize end,
+                        min = 8,
+                        max = 20,
+                        step = 1,
+                        get = function(info)
+                            return self.db.profile.dashboardFontSize
+                        end,
                         set = function(info, value)
                             self.db.profile.dashboardFontSize = value
                             self:SetDashboardFontSize(value)
                         end,
-                        order = 5,
+                        order = 5
                     },
-                },
+                    showTotalOnDashboard = {
+                        type = "toggle",
+                        name = "Show Total Kills on Dashboard",
+                        desc = "Toggles the visibility of the 'Total Kills' section on the dashboard.",
+                        get = function(info)
+                            return self.db.profile.showTotalOnDashboard
+                        end,
+                        set = function(info, value)
+                            self.db.profile.showTotalOnDashboard = value
+                            self:UpdateDashboardLayout() -- We will create this function
+                        end,
+                        order = 6
+                    },
+                    showSessionOnDashboard = {
+                        type = "toggle",
+                        name = "Show Session Kills on Dashboard",
+                        desc = "Toggles the visibility of the 'Session Kills' section on the dashboard.",
+                        get = function(info)
+                            return self.db.profile.showSessionOnDashboard
+                        end,
+                        set = function(info, value)
+                            self.db.profile.showSessionOnDashboard = value
+                            self:UpdateDashboardLayout() -- We will create this function
+                        end,
+                        order = 7
+                    }
+                }
             },
             data_management = {
                 type = "group",
@@ -168,18 +231,22 @@ function KillCounter:OnAce3Initialize()
                         type = "execute",
                         name = "Reset Session Data",
                         desc = "Clears all kill counters and Kills Per Hour (KPH) data for the current session.",
-                        func = function() self:ResetSessionKills() end,
-                        order = 1,
+                        func = function()
+                            self:ResetSessionKills()
+                        end,
+                        order = 1
                     },
                     resetTotal = {
                         type = "execute",
                         name = "Reset All Kills",
                         desc = "Clears all persistent and session kill counters.",
-                        func = function() StaticPopup_Show("KILL_COUNTER_RESET_ALL") end,
-                        order = 2,
-                    },
-                },
-            },
+                        func = function()
+                            StaticPopup_Show("KILL_COUNTER_RESET_ALL")
+                        end,
+                        order = 2
+                    }
+                }
+            }
         }
     }
 
@@ -220,7 +287,8 @@ function KillCounter:ChatCommand(input)
                 local enemyName = self.db.profile.enemyNames[enemyID] or "Unknown"
                 local totalKills = self.db.profile.kills[enemyID] or 0
                 local sessionKills = self.db.sessionKills[enemyID] or 0
-                print(string.format("|cFF00FF00KillCounter:|r %s (ID: %d) - Total: %d, Session: %d", enemyName, enemyID, totalKills, sessionKills))
+                print(string.format("|cFF00FF00KillCounter:|r %s (ID: %d) - Total: %d, Session: %d", enemyName, enemyID,
+                    totalKills, sessionKills))
             else
                 print("|cFFFF0000KillCounter:|r Invalid enemy ID. Please provide a number.")
             end
@@ -230,17 +298,16 @@ function KillCounter:ChatCommand(input)
     end
 end
 
-
 -- Create a confirmation dialog for resetting all data.
 StaticPopupDialogs["KILL_COUNTER_RESET_ALL"] = {
-  text = "This will permanently delete all recorded kill data. Are you sure?",
-  button1 = "Yes",
-  button2 = "No",
-  OnAccept = function()
-      KillCounter:ResetAllKills()
-  end,
-  timeout = 0,
-  whileDead = true,
-  hideOnEscape = true,
-  preferredIndex = 3,
+    text = "This will permanently delete all recorded kill data. Are you sure?",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = function()
+        KillCounter:ResetAllKills()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
 }
