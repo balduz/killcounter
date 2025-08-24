@@ -175,8 +175,7 @@ function KillCounter:OnCombatEvent()
     end
 
     local isPlayerKill = bit.band(sourceFlags, COMBATLOG_OBJECT_CONTROL_PLAYER) > 0 and bit.band(sourceFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0
-    print(isPlayerKill)
-    if (isPlayerKill or (eventType == "PARTY_KILL" and IsInGroup())) and destGUID and destName and destName ~= "" then
+    if (isPlayerKill or (eventType == "PARTY_KILL" and (IsInGroup() or IsInRaid()))) and destGUID and destName and destName ~= "" then
         local enemyID = self:GetNPCID(destGUID)
         if enemyID then 
             KillCounter:AddKill(enemyID, destName)
