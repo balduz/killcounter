@@ -173,42 +173,34 @@ function KillCounter:SetDashboardFontSize(size)
 end
 
 
+local function UpdateKillSection(linesTable, countLabel, topKills, totalCount, enemyNames)
+    countLabel:SetText(string.format("|cFF87CEEB%d|r", totalCount))
+
+    for i = 1, 3 do
+        local line = linesTable[i]
+        if topKills[i] then
+            local npcID, count = topKills[i][1], topKills[i][2]
+            local enemyName = enemyNames[npcID] or "Unknown"
+            line.name:SetText(string.format("%d. %s:", i, enemyName))
+            line.count:SetText(string.format("|cFFFFD100%d|r", count))
+        else
+            line.name:SetText("")
+            line.count:SetText("")
+        end
+    end
+end
+
 function KillCounter:UpdateDashboard()
     if not self.dashboardFrame or not self.dashboardFrame:IsShown() then
         return
     end
 
     local totalKills, sessionKills = self:GetKillTotals()
-    self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
-    self.sessionKillsCount:SetText(string.format("|cFF87CEEB%d|r", sessionKills))
-
     local topTotalKills = self:GetTopKills(self.db.profile.kills, 3)
-    for i = 1, 3 do
-        local line = self.totalKillsLines[i]
-        if topTotalKills[i] then
-            local npcID, count = topTotalKills[i][1], topTotalKills[i][2]
-            local enemyName = self.db.profile.enemyNames[npcID] or "Unknown"
-            line.name:SetText(string.format("%d. %s:", i, enemyName))
-            line.count:SetText(string.format("|cFFFFD100%d|r", count))
-        else
-            line.name:SetText("")
-            line.count:SetText("")
-        end
-    end
-
     local topSessionKills = self:GetTopKills(self.db.sessionKills, 3)
-    for i = 1, 3 do
-        local line = self.sessionKillsLines[i]
-        if topSessionKills[i] then
-            local npcID, count = topSessionKills[i][1], topSessionKills[i][2]
-            local enemyName = self.db.profile.enemyNames[npcID] or "Unknown"
-            line.name:SetText(string.format("%d. %s:", i, enemyName))
-            line.count:SetText(string.format("|cFFFFD100%d|r", count))
-        else
-            line.name:SetText("")
-            line.count:SetText("")
-        end
-    end
+
+    UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills, self.db.profile.enemyNames)
+    UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills, self.db.profile.enemyNames)
 end
 
 function KillCounter:ToggleDashboard(show)
