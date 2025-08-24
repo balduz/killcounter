@@ -168,25 +168,21 @@ function KillCounter:GetTopKills(killsTable, count)
 end
 
 function KillCounter:OnCombatEvent()
-    local args = {CombatLogGetCurrentEventInfo()}
-    local timestamp, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool, auraType, amount = unpack(args)
+    local timestamp, eventType, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags = CombatLogGetCurrentEventInfo()
     
-    if event ~= "UNIT_DIED" and event ~= "PARTY_KILL" then
+    if eventType ~= "UNIT_DIED" and eventType ~= "PARTY_KILL" then
         return
     end
-    
-    local playerGUID = UnitGUID("player")
-    
-    if destGUID and destName and destName ~= "" then
-        -- Count if player was the killer OR if it's a party kill and player is in a party
-        if sourceGUID == playerGUID or (event == "PARTY_KILL" and (IsInGroup() or IsInRaid())) then
-            local enemyID = self:GetNPCID(destGUID)
-            if not enemyID then 
-                return nil 
-            end
-            KillCounter:AddKill(enemyID, destName)
 
-            self:UpdateDashboard()
+    local isPlayerKill = bit.band(sourceFlags, COMBATLOG_OBJECT_CONTROL_PLAYER) > 0 and bit.band(sourceFlags, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0
+    print(isPlayerKill)
+    if (isPlayerKill or (eventType == "PARTY_KILL" and IsInGroup())) and destGUID and destName and destName ~= "" then
+        local enemyID = self:GetNPCID(destGUID)
+        if enemyID then 
+            KillCounter:AddKill(enemyID, destName)
+            if self.dashboardFrame and self.dashboardFrame:IsShown() then
+                self:UpdateDashboard()
+            end
         end
     end
 end

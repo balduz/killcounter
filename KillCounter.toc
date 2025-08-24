@@ -1,4 +1,4 @@
-## Interface: 11404
+## Interface: 11507
 ## Title: Enhanced Kill Counter
 ## Notes: Tracks enemy kills and displays a dashboard with advanced features
 ## Author: Your Name
