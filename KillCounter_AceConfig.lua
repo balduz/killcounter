@@ -32,6 +32,7 @@ function KillCounter:OnAce3Initialize()
             dashboardWidth = 220,
             dashboardHeight = 180,
             dashboardPosition = {},
+            dashboardTopKills = 3,
             kills = {},
             enemyNames = {},
             showTotalOnDashboard = true,
@@ -219,6 +220,23 @@ function KillCounter:OnAce3Initialize()
                             self:UpdateDashboardLayout() -- We will create this function
                         end,
                         order = 7
+                    },
+                    dashboardTopKills = {
+                        type = "range",
+                        name = "Number of Kills to Show",
+                        desc = "Adjusts how many top kills are shown on the dashboard.",
+                        min = 1,
+                        max = 10,
+                        step = 1,
+                        get = function(info)
+                            return self.db.profile.dashboardTopKills or 3
+                        end,
+                        set = function(info, value)
+                            self.db.profile.dashboardTopKills = value
+                            self:UpdateDashboardLayout()
+                            self:UpdateDashboard()
+                        end,
+                        order = 8
                     }
                 }
             },

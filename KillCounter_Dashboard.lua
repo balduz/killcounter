@@ -2,6 +2,8 @@
 -- Creates and manages the kill counter dashboard
 local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 
+local MAX_DASHBOARD_LINES = 10 -- Define a maximum number of lines
+
 -- Helper function to create a section in the dashboard
 local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLabel, linesTable)
     local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
@@ -19,7 +21,7 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
     countLabel:SetJustifyH("RIGHT")
 
     local lastAnchor = title
-    for i = 1, 3 do
+    for i = 1, MAX_DASHBOARD_LINES do
         local name = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
         name:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -5)
         name:SetTextColor(1, 1, 1)
@@ -176,7 +178,7 @@ function KillCounter:SetDashboardFontSize(size)
     self.sessionKillsTitle:SetFont(fontName, size, fontFlags)
     self.sessionKillsCount:SetFont(fontName, size, fontFlags)
 
-    for i = 1, 3 do
+    for i = 1, MAX_DASHBOARD_LINES do
         self.totalKillsLines[i].name:SetFont(fontName, size - 2, fontFlags)
         self.totalKillsLines[i].count:SetFont(fontName, size - 2, fontFlags)
         self.sessionKillsLines[i].name:SetFont(fontName, size - 2, fontFlags)
@@ -185,16 +187,19 @@ function KillCounter:SetDashboardFontSize(size)
 end
 
 local function UpdateKillSection(linesTable, countLabel, topKills, totalCount, enemyNames)
-    for i = 1, 3 do
+    local showCount = KillCounter.db.profile.dashboardTopKills or 3
+    for i = 1, MAX_DASHBOARD_LINES do
         local line = linesTable[i]
-        if topKills[i] then
+        if i <= showCount and topKills[i] then
             local npcID, count = topKills[i][1], topKills[i][2]
             local enemyName = enemyNames[npcID] or "Unknown"
             line.name:SetText(string.format("%d. %s:", i, enemyName))
             line.count:SetText(string.format("|cFFFFD100%d|r", count))
+            line.name:Show()
+            line.count:Show()
         else
-            line.name:SetText("")
-            line.count:SetText("")
+            line.name:Hide()
+            line.count:Hide()
         end
     end
 end
@@ -204,9 +209,10 @@ function KillCounter:UpdateDashboard()
         return
     end
 
+    local topKillsCount = self.db.profile.dashboardTopKills or 3
     local totalKills, sessionKills = self:GetKillTotals()
-    local topTotalKills = self:GetTopKills(self.db.profile.kills, 3)
-    local topSessionKills = self:GetTopKills(self.db.sessionKills, 3)
+    local topTotalKills = self:GetTopKills(self.db.profile.kills, topKillsCount)
+    local topSessionKills = self:GetTopKills(self.db.sessionKills, topKillsCount)
 
     self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
     if #topTotalKills > 0 then
@@ -226,14 +232,21 @@ function KillCounter:UpdateDashboard()
 end
 
 function SetPlaceholderText(linesTable, message)
+    local showCount = KillCounter.db.profile.dashboardTopKills or 3
     -- Display the message on the first line
-    linesTable[1].name:SetText(message)
-    linesTable[1].count:SetText("")
+    if showCount > 0 then
+        linesTable[1].name:SetText(message)
+        linesTable[1].count:SetText("")
+        linesTable[1].name:Show()
+        linesTable[1].count:Show()
+    end
 
-    -- Clear the other lines
-    for i = 2, 3 do
-        linesTable[i].name:SetText("")
-        linesTable[i].count:SetText("")
+    -- Clear and hide the other lines
+    for i = 2, MAX_DASHBOARD_LINES do
+        if linesTable[i] then
+            linesTable[i].name:Hide()
+            linesTable[i].count:Hide()
+        end
     end
 end
 
@@ -262,14 +275,14 @@ function KillCounter:UpdateDashboardLayout()
     if showTotal then
         self.totalKillsTitle:Show()
         self.totalKillsCount:Show()
-        for i = 1, 3 do
+        for i = 1, MAX_DASHBOARD_LINES do
             self.totalKillsLines[i].name:Show()
             self.totalKillsLines[i].count:Show()
         end
     else
         self.totalKillsTitle:Hide()
         self.totalKillsCount:Hide()
-        for i = 1, 3 do
+        for i = 1, MAX_DASHBOARD_LINES do
             self.totalKillsLines[i].name:Hide()
             self.totalKillsLines[i].count:Hide()
         end
@@ -279,14 +292,14 @@ function KillCounter:UpdateDashboardLayout()
     if showSession then
         self.sessionKillsTitle:Show()
         self.sessionKillsCount:Show()
-        for i = 1, 3 do
+        for i = 1, MAX_DASHBOARD_LINES do
             self.sessionKillsLines[i].name:Show()
             self.sessionKillsLines[i].count:Show()
         end
     else
         self.sessionKillsTitle:Hide()
         self.sessionKillsCount:Hide()
-        for i = 1, 3 do
+        for i = 1, MAX_DASHBOARD_LINES do
             self.sessionKillsLines[i].name:Hide()
             self.sessionKillsLines[i].count:Hide()
         end
@@ -295,8 +308,9 @@ function KillCounter:UpdateDashboardLayout()
     -- Re-anchor the 'Session' title based on whether 'Total' is visible
     self.sessionKillsTitle:ClearAllPoints()
     if showTotal then
-        -- Anchor it below the last line of the total kills section
-        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[3].name, "BOTTOMLEFT", 0, -15)
+        -- Anchor it below the last visible line of the total kills section
+        local lastLine = self.db.profile.dashboardTopKills or 3
+        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[lastLine].name, "BOTTOMLEFT", 0, -15)
     else
         -- Anchor it directly to the parent frame's top
         self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsTitle:GetParent(), "TOPLEFT", 15, 0)
