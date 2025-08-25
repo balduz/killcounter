@@ -186,17 +186,46 @@ function KillCounter:SetDashboardFontSize(size)
     end
 end
 
-local function UpdateKillSection(linesTable, countLabel, topKills, totalCount, enemyNames)
+local function UpdateKillSection(linesTable, topKills, enemyNames, placeholder)
     local showCount = KillCounter.db.profile.dashboardTopKills or 3
+
+    if #topKills == 0 then
+        -- Handle the placeholder case
+        for i = 1, MAX_DASHBOARD_LINES do
+            local line = linesTable[i]
+            if i <= showCount then
+                line.name:Show()
+                line.count:Show()
+                if i == 1 then
+                    line.name:SetText(placeholder)
+                    line.count:SetText("")
+                else
+                    line.name:SetText(" ") -- Use a space to maintain height
+                    line.count:SetText("")
+                end
+            else
+                line.name:Hide()
+                line.count:Hide()
+            end
+        end
+        return
+    end
+
+    -- Handle the case with data
     for i = 1, MAX_DASHBOARD_LINES do
         local line = linesTable[i]
-        if i <= showCount and topKills[i] then
-            local npcID, count = topKills[i][1], topKills[i][2]
-            local enemyName = enemyNames[npcID] or "Unknown"
-            line.name:SetText(string.format("%d. %s:", i, enemyName))
-            line.count:SetText(string.format("|cFFFFD100%d|r", count))
+        if i <= showCount then
             line.name:Show()
             line.count:Show()
+            if topKills[i] then
+                local npcID, count = topKills[i][1], topKills[i][2]
+                local enemyName = enemyNames[npcID] or "Unknown"
+                line.name:SetText(string.format("%d. %s:", i, enemyName))
+                line.count:SetText(string.format("|cFFFFD100%d|r", count))
+            else
+                line.name:SetText(" ") -- Use a space to maintain height
+                line.count:SetText("")
+            end
         else
             line.name:Hide()
             line.count:Hide()
@@ -215,39 +244,11 @@ function KillCounter:UpdateDashboard()
     local topSessionKills = self:GetTopKills(self.db.sessionKills, topKillsCount)
 
     self.totalKillsCount:SetText(string.format("|cFF87CEEB%d|r", totalKills))
-    if #topTotalKills > 0 then
-        UpdateKillSection(self.totalKillsLines, self.totalKillsCount, topTotalKills, totalKills,
-            self.db.profile.enemyNames)
-    else
-        SetPlaceholderText(self.totalKillsLines, "|cFFa0a0a0No kills yet!|r")
-    end
+    UpdateKillSection(self.totalKillsLines, topTotalKills, self.db.profile.enemyNames, "|cFFa0a0a0No kills yet!|r")
 
     self.sessionKillsCount:SetText(string.format("|cFF87CEEB%d|r", sessionKills))
-    if #topSessionKills > 0 then
-        UpdateKillSection(self.sessionKillsLines, self.sessionKillsCount, topSessionKills, sessionKills,
-            self.db.profile.enemyNames)
-    else
-        SetPlaceholderText(self.sessionKillsLines, "|cFFa0a0a0No kills this session.|r")
-    end
-end
-
-function SetPlaceholderText(linesTable, message)
-    local showCount = KillCounter.db.profile.dashboardTopKills or 3
-    -- Display the message on the first line
-    if showCount > 0 then
-        linesTable[1].name:SetText(message)
-        linesTable[1].count:SetText("")
-        linesTable[1].name:Show()
-        linesTable[1].count:Show()
-    end
-
-    -- Clear and hide the other lines
-    for i = 2, MAX_DASHBOARD_LINES do
-        if linesTable[i] then
-            linesTable[i].name:Hide()
-            linesTable[i].count:Hide()
-        end
-    end
+    UpdateKillSection(self.sessionKillsLines, topSessionKills, self.db.profile.enemyNames,
+        "|cFFa0a0a0No kills this session.|r")
 end
 
 function KillCounter:ToggleDashboard(show)
@@ -270,49 +271,31 @@ function KillCounter:UpdateDashboardLayout()
 
     local showTotal = self.db.profile.showTotalOnDashboard
     local showSession = self.db.profile.showSessionOnDashboard
+    local topKillsCount = self.db.profile.dashboardTopKills or 3
 
-    -- Toggle visibility of the 'Total' section and all its lines
-    if showTotal then
-        self.totalKillsTitle:Show()
-        self.totalKillsCount:Show()
-        for i = 1, MAX_DASHBOARD_LINES do
-            self.totalKillsLines[i].name:Show()
-            self.totalKillsLines[i].count:Show()
-        end
-    else
-        self.totalKillsTitle:Hide()
-        self.totalKillsCount:Hide()
-        for i = 1, MAX_DASHBOARD_LINES do
-            self.totalKillsLines[i].name:Hide()
-            self.totalKillsLines[i].count:Hide()
-        end
+    -- Show/hide entire section titles
+    self.totalKillsTitle:SetShown(showTotal)
+    self.totalKillsCount:SetShown(showTotal)
+    self.sessionKillsTitle:SetShown(showSession)
+    self.sessionKillsCount:SetShown(showSession)
+
+    -- Show/hide the lines within each section based on their master visibility toggle
+    for i = 1, MAX_DASHBOARD_LINES do
+        self.totalKillsLines[i].name:SetShown(showTotal)
+        self.totalKillsLines[i].count:SetShown(showTotal)
+        self.sessionKillsLines[i].name:SetShown(showSession)
+        self.sessionKillsLines[i].count:SetShown(showSession)
     end
 
-    -- Toggle visibility of the 'Session' section and all its lines
-    if showSession then
-        self.sessionKillsTitle:Show()
-        self.sessionKillsCount:Show()
-        for i = 1, MAX_DASHBOARD_LINES do
-            self.sessionKillsLines[i].name:Show()
-            self.sessionKillsLines[i].count:Show()
-        end
-    else
-        self.sessionKillsTitle:Hide()
-        self.sessionKillsCount:Hide()
-        for i = 1, MAX_DASHBOARD_LINES do
-            self.sessionKillsLines[i].name:Hide()
-            self.sessionKillsLines[i].count:Hide()
-        end
-    end
-
-    -- Re-anchor the 'Session' title based on whether 'Total' is visible
+    -- Correctly anchor the session section
     self.sessionKillsTitle:ClearAllPoints()
     if showTotal then
-        -- Anchor it below the last visible line of the total kills section
-        local lastLine = self.db.profile.dashboardTopKills or 3
-        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[lastLine].name, "BOTTOMLEFT", 0, -15)
+        -- Anchor to the last line that is SUPPOSED to be visible, creating a static layout.
+        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[topKillsCount].name, "BOTTOMLEFT", 0, -15)
     else
-        -- Anchor it directly to the parent frame's top
+        -- If the total section is hidden, anchor to the top of the container.
         self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsTitle:GetParent(), "TOPLEFT", 15, 0)
     end
+
+    self:UpdateDashboard()
 end

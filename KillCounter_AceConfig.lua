@@ -204,7 +204,7 @@ function KillCounter:OnAce3Initialize()
                         end,
                         set = function(info, value)
                             self.db.profile.showTotalOnDashboard = value
-                            self:UpdateDashboardLayout() -- We will create this function
+                            self:UpdateDashboardLayout()
                         end,
                         order = 6
                     },
@@ -217,7 +217,7 @@ function KillCounter:OnAce3Initialize()
                         end,
                         set = function(info, value)
                             self.db.profile.showSessionOnDashboard = value
-                            self:UpdateDashboardLayout() -- We will create this function
+                            self:UpdateDashboardLayout()
                         end,
                         order = 7
                     },
@@ -234,7 +234,6 @@ function KillCounter:OnAce3Initialize()
                         set = function(info, value)
                             self.db.profile.dashboardTopKills = value
                             self:UpdateDashboardLayout()
-                            self:UpdateDashboard()
                         end,
                         order = 8
                     }
