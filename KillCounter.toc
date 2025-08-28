@@ -1,10 +1,10 @@
 ## Interface: 11507
 ## Title: Enhanced Kill Counter
-## Notes: Tracks enemy kills and displays a dashboard with advanced features
+## Notes: Tracks enemy kills and displays a dashboard
 ## Author: Your Name
 ## Version: 1.0
 ## SavedVariables: KillCounterEnhancedDB
-## OptionalDeps: Blizzard_AddonManager
+## OptionalDeps: Ace3
 
 KillCounter_Core.lua
 KillCounter_AceConfig.lua
