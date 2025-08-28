@@ -49,6 +49,7 @@ function KillCounter:OnAce3Initialize()
         type = "group",
         name = "Kill Counter",
         args = {
+            profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db),
             general = {
                 type = "group",
                 name = "General Settings",

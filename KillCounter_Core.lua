@@ -1,5 +1,4 @@
 -- KillCounter_Core.lua
--- Core addon functionality and initialization
 local AceAddon = LibStub("AceAddon-3.0")
 KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0", "AceConsole-3.0")
 
@@ -24,6 +23,16 @@ function KillCounter:OnInitialize()
     self.db.sessionKills = {}
     self.sessionKphData = {}
 
+    self.db:RegisterCallback("OnProfileChanged", function()
+        self:RefreshDashboardFromProfile()
+    end)
+    self.db:RegisterCallback("OnProfileCopied", function()
+        self:RefreshDashboardFromProfile()
+    end)
+    self.db:RegisterCallback("OnProfileReset", function()
+        self:RefreshDashboardFromProfile()
+    end)
+
     self.eventFrame = CreateFrame("Frame")
     self.eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self.eventFrame:SetScript("OnEvent", function(frame, event, ...)
@@ -42,6 +51,32 @@ function KillCounter:OnInitialize()
         self:PrintWelcomeMessage()
         self.db.profile.firstRun = true
     end
+end
+
+function KillCounter:RefreshDashboardFromProfile()
+    if not self.dashboardFrame then
+        return
+    end
+
+    -- Update all dashboard settings from the current profile
+    self:SetDashboardLocked(self.db.profile.dashboardLocked)
+    self:SetDashboardResizeLocked(self.db.profile.dashboardResizeLocked)
+    self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
+    self:SetDashboardFontSize(self.db.profile.dashboardFontSize)
+    self:UpdateDashboardLayout()
+    self:ToggleDashboard(self.db.profile.showDashboard)
+
+    -- Re-apply position and size
+    local pos = self.db.profile.dashboardPosition
+    self.dashboardFrame:ClearAllPoints()
+    if pos and pos.point then
+        self.dashboardFrame:SetPoint(pos.point, UIParent, pos.relativePoint, pos.xOfs, pos.yOfs)
+    else
+        self.dashboardFrame:SetPoint("LEFT", 20, 0)
+    end
+    self.dashboardFrame:SetSize(self.db.profile.dashboardWidth, self.db.profile.dashboardHeight)
+
+    self:UpdateDashboard()
 end
 
 function KillCounter:InitializeTooltip()
