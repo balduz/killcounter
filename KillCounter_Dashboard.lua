@@ -4,14 +4,9 @@ local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 
 local MAX_DASHBOARD_LINES = 10 -- Define a maximum number of lines
 
--- Helper function to create a section in the dashboard
-local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLabel, linesTable)
+local function CreateKillSection(parent, titleText, linesTable)
     local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    if anchor then
-        title:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, yOffset)
-    else
-        title:SetPoint("TOPLEFT", 15, yOffset)
-    end
+    title:SetPoint("TOPLEFT", 15, 0)
     title:SetText(titleText)
     title:SetTextColor(1, 1, 0.6)
 
@@ -38,7 +33,7 @@ local function CreateKillSection(parent, anchor, titleText, yOffset, killCountLa
         lastAnchor = name
     end
 
-    return countLabel, lastAnchor, title
+    return countLabel, title
 end
 
 function KillCounter:CreateDashboard()
@@ -85,20 +80,28 @@ function KillCounter:CreateDashboard()
     self.dashboardTitle:SetText("Kill Counter")
     self.dashboardTitle:SetTextColor(1, 1, 0)
 
-    -- Kills frame
-    local killsFrame = CreateFrame("Frame", nil, self.dashboardFrame)
-    killsFrame:SetPoint("TOPLEFT", 0, -35)
-    killsFrame:SetPoint("BOTTOMRIGHT", self.dashboardFrame, "BOTTOMRIGHT", 0, 0)
+    -- Main content area frame
+    local contentFrame = CreateFrame("Frame", nil, self.dashboardFrame)
+    contentFrame:SetPoint("TOPLEFT", 0, -35)
+    contentFrame:SetPoint("BOTTOMRIGHT", self.dashboardFrame, "BOTTOMRIGHT", 0, 10)
 
-    -- Create Total and Session Kills sections
+    -- Container for the Total Kills section
+    self.totalKillsContainer = CreateFrame("Frame", nil, contentFrame)
+    self.totalKillsContainer:SetPoint("TOPLEFT")
+    self.totalKillsContainer:SetPoint("RIGHT")
+
+    -- Container for the Session Kills section
+    self.sessionKillsContainer = CreateFrame("Frame", nil, contentFrame)
+    self.sessionKillsContainer:SetPoint("RIGHT")
+
+    -- Create the text elements inside their respective containers
     self.totalKillsLines = {}
-    local lastAnchor
-    self.totalKillsCount, lastAnchor, self.totalKillsTitle =
-        CreateKillSection(killsFrame, nil, "Total", 0, self.totalKillsCount, self.totalKillsLines)
+    self.totalKillsCount, self.totalKillsTitle = CreateKillSection(self.totalKillsContainer, "Total Kills",
+        self.totalKillsLines)
 
     self.sessionKillsLines = {}
-    self.sessionKillsCount, _, self.sessionKillsTitle = CreateKillSection(killsFrame, lastAnchor, "Session", -15,
-        self.sessionKillsCount, self.sessionKillsLines)
+    self.sessionKillsCount, self.sessionKillsTitle = CreateKillSection(self.sessionKillsContainer, "Session Kills",
+        self.sessionKillsLines)
 
     -- Resize Handle
     self.resizeHandle = CreateFrame("Frame", nil, self.dashboardFrame)
@@ -126,7 +129,6 @@ function KillCounter:CreateDashboard()
     self:SetDashboardResizeLocked(self.db.profile.dashboardResizeLocked)
     self:SetDashboardOpacity(self.db.profile.dashboardOpacity)
     self:SetDashboardFontSize(self.db.profile.dashboardFontSize)
-
     self:UpdateDashboardLayout()
 end
 
@@ -258,6 +260,7 @@ function KillCounter:ToggleDashboard(show)
 
     if show then
         self.dashboardFrame:Show()
+        self:UpdateDashboardLayout()
         self:UpdateDashboard()
     else
         self.dashboardFrame:Hide()
@@ -273,29 +276,29 @@ function KillCounter:UpdateDashboardLayout()
     local showSession = self.db.profile.showSessionOnDashboard
     local topKillsCount = self.db.profile.dashboardTopKills or 3
 
-    -- Show/hide entire section titles
-    self.totalKillsTitle:SetShown(showTotal)
-    self.totalKillsCount:SetShown(showTotal)
-    self.sessionKillsTitle:SetShown(showSession)
-    self.sessionKillsCount:SetShown(showSession)
+    local sectionHeight = 14 + (topKillsCount * 17)
 
-    -- Show/hide the lines within each section based on their master visibility toggle
-    for i = 1, MAX_DASHBOARD_LINES do
-        self.totalKillsLines[i].name:SetShown(showTotal)
-        self.totalKillsLines[i].count:SetShown(showTotal)
-        self.sessionKillsLines[i].name:SetShown(showSession)
-        self.sessionKillsLines[i].count:SetShown(showSession)
-    end
-
-    -- Correctly anchor the session section
-    self.sessionKillsTitle:ClearAllPoints()
+    self.totalKillsContainer:SetShown(showTotal)
     if showTotal then
-        -- Anchor to the last line that is SUPPOSED to be visible, creating a static layout.
-        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsLines[topKillsCount].name, "BOTTOMLEFT", 0, -15)
+        self.totalKillsContainer:SetHeight(sectionHeight)
     else
-        -- If the total section is hidden, anchor to the top of the container.
-        self.sessionKillsTitle:SetPoint("TOPLEFT", self.totalKillsTitle:GetParent(), "TOPLEFT", 15, 0)
+        self.totalKillsContainer:SetHeight(0)
     end
+
+    self.sessionKillsContainer:SetShown(showSession)
+    if showSession then
+        self.sessionKillsContainer:SetHeight(sectionHeight)
+    else
+        self.sessionKillsContainer:SetHeight(0)
+    end
+
+    self.sessionKillsContainer:ClearAllPoints()
+    if showTotal then
+        self.sessionKillsContainer:SetPoint("TOPLEFT", self.totalKillsContainer, "BOTTOMLEFT", 0, -15)
+    else
+        self.sessionKillsContainer:SetPoint("TOPLEFT")
+    end
+    self.sessionKillsContainer:SetPoint("RIGHT")
 
     self:UpdateDashboard()
 end

@@ -207,6 +207,9 @@ function KillCounter:OnAce3Initialize()
                             self.db.profile.showTotalOnDashboard = value
                             self:UpdateDashboardLayout()
                         end,
+                        disabled = function(info)
+                            return self.db.profile.showTotalOnDashboard and not self.db.profile.showSessionOnDashboard
+                        end,
                         order = 6
                     },
                     showSessionOnDashboard = {
@@ -219,6 +222,9 @@ function KillCounter:OnAce3Initialize()
                         set = function(info, value)
                             self.db.profile.showSessionOnDashboard = value
                             self:UpdateDashboardLayout()
+                        end,
+                        disabled = function(info)
+                            return self.db.profile.showSessionOnDashboard and not self.db.profile.showTotalOnDashboard
                         end,
                         order = 7
                     },
