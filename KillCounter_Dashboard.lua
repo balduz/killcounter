@@ -1,4 +1,3 @@
--- KillCounter_Dashboard.lua
 -- Creates and manages the kill counter dashboard
 local KillCounter = LibStub("AceAddon-3.0"):GetAddon("KillCounter")
 

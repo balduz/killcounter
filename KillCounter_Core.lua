@@ -1,4 +1,3 @@
--- KillCounter_Core.lua
 local AceAddon = LibStub("AceAddon-3.0")
 KillCounter = AceAddon:NewAddon("KillCounter", "AceEvent-3.0", "AceConsole-3.0")
 

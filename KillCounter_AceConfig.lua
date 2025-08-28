@@ -1,9 +1,6 @@
--- KillCounter_AceConfig.lua
--- Defines the addon's options panel and slash commands using AceConfig-3.0
 local AceAddon = LibStub("AceAddon-3.0")
 local KillCounter = AceAddon:GetAddon("KillCounter")
 
--- Localize WoW API functions
 local StaticPopup_Show = StaticPopup_Show
 local StaticPopupDialogs = StaticPopupDialogs
 local tonumber = tonumber
